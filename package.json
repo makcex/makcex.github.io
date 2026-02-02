@@ -1,0 +1,13 @@
+{
+  "name": "data-barang-shopee",
+  "version": "1.0.0",
+  "description": "Node.js native http server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "formidable": "^3.5.4"
+  }
+}
+

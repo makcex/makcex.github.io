@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halaman Admin</title>
+</head>
+<body>
+    <h1> Admin Dashboard</h1>
+
+    <div class="box">
+        <h3>Tambah Produk Baru</h3>
+        <input type="file" id="img" placeholder="pilih gambar"><hr>
+        <input type="text" id="nama" placeholder="nama produk"><hr>
+        <input type="number" id="harga" placeholder="harga produk"><hr>
+        <input type="text" id="jenis" placeholder="type produk"><hr>
+        <input type="number" id="stok" placeholder="jumlah produk"><hr>
+        <button onclick="tambahProduk()">Simpan</button>
+    </div>
+    <script>
+        
+    function tambahProduk() {
+    const fileInput = document.getElementById('img')
+
+    if (fileInput.files.length === 0) {
+        alert('Pilih gambar terlebih dahulu!')
+        return
+    }
+
+    // 1️⃣ Upload gambar
+    const formData = new FormData()
+    formData.append('img', fileInput.files[0])
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(upload => {
+        // 2️⃣ Simpan data produk
+        const produk = {
+            gbr: upload.fileName,
+            nama: document.getElementById('nama').value,
+            harga: Number(document.getElementById('harga').value),
+            jenis: document.getElementById('jenis').value,
+            stok: Number(document.getElementById('stok').value)
+        }
+
+        return fetch('/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(produk)
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert('Barang berhasil ditambahkan ✅')
+
+        document.querySelectorAll('input').forEach(i => i.value = '')
+    })
+    .catch(err => {
+        console.error(err)
+        alert('Terjadi error 😢')
+    })
+}
+</script>
+</body>
+</html>

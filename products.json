@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1769831454042,
+    "nama": "Oli motor honda",
+    "harga": 50000,
+    "jenis": "honda/yamaha",
+    "stok": 10,
+    "foto": "cfl77zhcm28vh39fe8tefsddn.jpg"
+  },
+  {
+    "id": 1769919918857,
+    "nama": "prodo",
+    "harga": 20000,
+    "jenis": "Honda/Yamaha",
+    "stok": 5,
+    "foto": "wptz0edyp44hhxtjek6q8yv0t.jpg"
+  },
+  {
+    "id": 1769920033242,
+    "nama": "ban Motor",
+    "harga": 80000,
+    "jenis": "80/90",
+    "stok": 4,
+    "foto": "sej8kclj4sbgpv3wihpthpcat.jpg"
+  },
+  {
+    "id": 1769920129852,
+    "nama": "Acesories",
+    "harga": 10000,
+    "jenis": "Honda/Yamaha",
+    "stok": 10,
+    "foto": "gp735lojxc2wqvdlvk462gdgh.jpg"
+  }
+]

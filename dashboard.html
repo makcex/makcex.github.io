@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="description" content="Bengkel Motor Honda dan Yamaha di Ds Perbo. Layanan ganti oli, service motor, tambal ban, dan ganti sparepart.">
+
+<title>Bengkel Motor Honda dan Yamaha Perbo</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+}
+
+/* HEADER */
+header {
+  top: 0;
+  width: 100%;
+  position: fixed;
+  background: #ee4d2d;
+  color: white;
+  padding: 5px 10px;
+  font-size: 20px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  z-index: 1000;
+}
+
+/* CONTAINER */
+.container {
+ position: relative;
+ margin-top: 100px;
+  padding: 20px;
+  width: 50%;
+}
+
+/* GRID PRODUK */
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.info {
+  position: fixed;
+  width: 25%;
+  height: 80%;
+  right: 10px;
+  top: 120px;
+  background: rgba(255,255,255,0.96);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  border-radius: 8px;
+}
+
+.info h2 {
+  color: #222;
+  text-align: center;
+}
+
+.info li {
+  margin-left: 30px;
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+.info h3 {
+  color: #333;
+  margin-left: 30px;
+  font-family: Arial, sans-serif;
+}
+
+.info h4 {
+  margin-left: 20px;
+  color: #444;
+}
+.card-body {
+  padding: 10px;
+}
+
+.card-body h4 {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.card-body p {
+  margin: 3px 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.keranjang {
+  width: 500px;
+  height: 600px;
+  position: fixed;
+  top: 110px;
+  background: rgba(255,255,255,0.96);
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+  right: -500px;
+  transition: all 0.3s ease-in-out;
+  overflow-x: auto;
+  z-index: 900;
+  text-align: center;
+}
+
+.keranjang.active {
+  right: 100px;
+}
+
+li {
+  cursor: pointer;
+}
+
+li:hover {
+  opacity: 0.8;
+}
+
+.cart {
+  width: 500px;
+}
+
+.btn-hapus {
+  width: 50px;
+}
+
+.price {
+  color: #ee4d2d;
+  font-weight: bold;
+}
+
+/* BUTTON */
+button {
+  width: 190px;
+  padding: 8px;
+  border: none;
+  background: #ee4d2d;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+button:hover {
+  background: #d73211;
+}
+
+.delet {
+  color: rgb(187, 11, 11);
+  position: absolute;
+  right: 5px;
+  top: 10px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+@keyframes flyToCart {
+  0% { transform: scale(1) translateY(0); opacity: 1; }
+  50% { transform: scale(1.2) translateY(-20px); opacity: 0.7; }
+  100% { transform: scale(0.5) translateY(-50px); opacity: 0; }
+}
+
+.fly {
+  animation: flyToCart 0.7s forwards;
+}
+
+ul {
+  margin-right: 20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Bengkel Motor Honda & Yamaha Ds Perbo </h1>
+  
+<ul>
+  <li class="krj" id="krjn">🛒 Keranjang
+    <span id="cartBadge" style="
+    background:red;
+    color:white;
+    border-radius:50%;
+    padding:2px 6px;
+    font-size:12px;
+    vertical-align: top;
+    margin-left:5px;
+    display:none;">0</span>
+  </li>
+</ul>
+</header>
+
+<div class="container">
+  <div class="products" id="productList"></div>
+</div>
+
+<div class="info">
+  <h2>Layanan Kami</h2>
+  <ul>
+    <li>Ganti oli</li>
+    <li>Service</li>
+    <li>Tambal Ban</li>
+    <li>Ganti SparePart</li>
+  </ul>
+  <hr>
+  <h3>Alamat Bengkel</h3>
+  <p>Ds Perbo Simpang 4, sebelah Bengkel Mael</p>
+</div>
+
+
+<div class="keranjang" id="belanjaan">
+        <h2>Keranjang</h2>
+        <div class="cart" id="cartList"></div>
+        <h3 id="total">Total: Rp 0</h3>
+        <button onclick="checkout()">Checkout</button>
+    </div>
+
+<script>
+
+  const keranjang = []
+  const products = []
+
+  fetch("/products")
+  .then(res => res.json())
+  .then(data => {
+    products.push(...data)
+    renderProducts()
+  })
+
+function updateBadge() {
+  const badge = document.getElementById('cartBadge')
+  const totalItem = keranjang.reduce((sum, item) => sum + item.jumlah, 0)
+
+  if(totalItem > 0) {
+    badge.style.display = 'inline-block'
+    badge.textContent = totalItem
+  } else {
+    badge.style.display = 'none'
+  }
+}
+
+function renderProducts() {
+const list = document.getElementById('productList')
+
+list.innerHTML = ""
+
+products.forEach(item => {
+  list.innerHTML += `
+  <div class='card'>
+  <img src='/img/${item.foto}'  alt='${item.nama}' width='200px' height='150px'-bengkel motor honda yamaha desa perbo>
+  <div class='card-body'>
+    <h4>${item.nama}</h4>
+    <p>stok: ${item.stok}</p>
+    <p class='price'>Rp ${item.harga}</p>
+    <button onclick='addToCart(${item.id})'>tambah ke keranjang</button>
+    </div>
+  </div>`
+})
+}
+renderProducts()
+
+
+function addToCart(id) {
+  const barang = products.find(b => b.id === id)
+    
+    if(!barang || barang.stok <= 0) {
+      alert('barang habis')
+      return
+    }
+
+    const k = keranjang.find(e => e.id === id)
+
+     if(k) {
+      k.jumlah++
+    }else {
+      keranjang.push({
+  id: barang.id,
+  nama: barang.nama,
+  harga: barang.harga,
+  jumlah: 1
+})
+}
+    
+   barang.stok--
+    renderKeranjang()
+    renderProducts()
+    updateBadge()
+  }
+    
+function renderKeranjang() {
+  const cart = document.getElementById('cartList')
+  const total = document.getElementById('total')
+
+  cart.innerHTML =''
+  keranjang.forEach((c, index) => {
+    cart.innerHTML += ` 
+    <p>${c.nama} - ${c.harga} X ${c.jumlah}
+      <button class='btn-hapus' data-index='${index}'>Batal</button>
+      </p>
+    `
+    })
+
+    document.querySelectorAll('.btn-hapus').forEach(btn => {
+  btn.addEventListener('click', function () {
+    hapus(this.dataset.index)
+  })
+})
+
+  let subTotal = keranjang.reduce((sum, c) => {
+    return sum + c.harga * c.jumlah
+  }, 0)
+  total.innerHTML = 'Total Pembayaran Rp' + subTotal.toLocaleString()
+
+}
+renderProducts()
+renderKeranjang()
+
+
+
+function hapus(index) {
+  const item = keranjang[index]
+  const produk = products.find(p => p.id === item.id)
+
+  produk.stok += item.jumlah   // stok balik
+  keranjang.splice(index, 1)
+
+  renderKeranjang()
+  renderProducts()
+  updateBadge()
+}
+
+const krj = document.getElementById('krjn')
+const belanja = document.getElementById('belanjaan')
+
+krj.addEventListener('click', function() {
+ belanja.classList.toggle('active')
+})
+const delet = document.createElement('span')
+ delet.innerText = 'X'
+ delet.setAttribute('class', 'delet')
+ belanja.appendChild(delet)
+
+ delet.addEventListener('click', function() {
+    belanja.classList.remove('active')
+ })
+
+function checkout() {
+  alert('Langsung datang ke lokasi| Ite Samo Ngupi!!!')
+}
+renderKeranjang()
+</script>
+
+</body>
+</html>
+
+
