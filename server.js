@@ -20,8 +20,8 @@ if (fs.existsSync(dataFile)) {
 
 
 const routes = {
-    '/': '/dashboard.html',
-    '/dashboard': '/dashboard.html',
+    '/': '/index.html',
+    '/dashboard': '/index.html',
     '/adm1n': '/admin.html'
 }
 
