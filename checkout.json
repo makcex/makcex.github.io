@@ -1,0 +1,39 @@
+[
+  {
+    "id": 1771338426375,
+    "user": {
+      "nama": "kiki",
+      "hp": "1234567",
+      "alamat": "alamprboat"
+    },
+    "cart": [
+      {
+        "id": 1769831454042,
+        "nama": "Oli motor honda",
+        "harga": 50000,
+        "jumlah": 1
+      }
+    ],
+    "total": 50000,
+    "tanggal": "2026-02-17T14:27:06.375Z"
+  },
+  {
+    "id": 1771388376788,
+    "user": {
+      "nama": "Pembeli Toko",
+      "hp": "-",
+      "alamat": "-"
+    },
+    "cart": [
+      {
+        "id": 1769831454042,
+        "nama": "Oli motor honda",
+        "harga": 50000,
+        "jumlah": 2
+      }
+    ],
+    "total": 100000,
+    "tanggal": "2026-02-18T04:19:36.788Z",
+    "tipe": "offline"
+  }
+]

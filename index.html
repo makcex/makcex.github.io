@@ -63,7 +63,7 @@ header {
   background: white;
   border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  
 }
 
 .card img {
@@ -127,7 +127,6 @@ p {
   top: 110px;
   background: rgba(255,255,255,0.52);
   border-radius: 8px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
   right: -500px;
   transition: all 0.3s ease-in-out;
   overflow-x: auto;
@@ -387,6 +386,13 @@ ul {
   </div>
 </div>
 
+<div class="pop" style="z-index: 9999; min-width: 300px; min-height: 60vh; display: none; position: absolute; left: 2rem; bottom: 2rem;">
+  <input type="text" id="nama" placeholder="isi nama"><br>
+  <input type="number" id="hp"><br>
+  <textarea name="" id="alamat" cols="30" rows="10">alamat</textarea>
+  <button onclick="kirim()">kirim</button>
+</div>
+
 <div class="keranjang" id="belanjaan">
         <h2>Keranjang</h2>
         <div class="cart" id="cartList"></div>
@@ -431,13 +437,12 @@ function updateBadge() {
 
 function renderProducts() {
 const list = document.getElementById('productList')
-
-list.innerHTML = ""
+html = ""
 
 products.forEach(item => {
-  list.innerHTML += `
+  html += `
   <div class='card'>
-  <img src='/img/${item.foto}'  alt='${item.nama}' width='200px' height='150px'-bengkel motor honda yamaha desa perbo>
+  <img src='/img/${item.foto}' loading="lazy"  alt='${item.nama}' width='200px' height='150px'-bengkel motor honda yamaha desa perbo>
   <div class='card-body'>
     <h4>${item.nama}</h4>
     <p>stok: ${item.stok}</p>
@@ -446,6 +451,7 @@ products.forEach(item => {
     </div>
   </div>`
 })
+list.innerHTML = html
 }
 renderProducts()
 
@@ -480,16 +486,16 @@ function addToCart(id) {
 function renderKeranjang() {
   const cart = document.getElementById('cartList')
   const total = document.getElementById('total')
+  html =''
 
-  cart.innerHTML =''
   keranjang.forEach((c, index) => {
-    cart.innerHTML += ` 
+    html += ` 
     <p>${c.nama} - ${c.harga} X ${c.jumlah}
       <button class='btn-hapus' data-index='${index}'>Batal</button>
       </p>
     `
     })
-
+    cart.innerHTML = html
     document.querySelectorAll('.btn-hapus').forEach(btn => {
   btn.addEventListener('click', function () {
     hapus(this.dataset.index)
@@ -514,6 +520,10 @@ function hapus(index) {
   produk.stok += item.jumlah   // stok balik
   keranjang.splice(index, 1)
 
+  document.querySelector(".pop").style.display ="none"
+  document.getElementById("nama").value = "";
+        document.getElementById("hp").value = "";
+        document.getElementById("alamat").value = "";
   renderKeranjang()
   renderProducts()
   updateBadge()
@@ -534,10 +544,56 @@ const delet = document.createElement('span')
     belanja.classList.remove('active')
  })
 
+ belanja.addEventListener("click", function(e) {
+  if(e.target === belanja) {
+    belanja.classList.remove("active")
+  }
+ })
+
 function checkout() {
-  alert('Langsung datang ke lokasi| Ite Samo Ngupi!!!')
+  if(keranjang.length === 0) {
+  return alert('keranjang kosong')
+  }
+  document.querySelector(".pop").style.display ="block"
 }
-renderKeranjang()
+
+function kirim() {
+  const user = {
+    nama: document.getElementById("nama").value,
+    hp: document.getElementById("hp").value,
+    alamat: document.getElementById("alamat").value
+  }
+
+  fetch("/checkout", {
+    method:"POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ user, keranjang })
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    if(!data.success){
+      alert(data.message)
+      return
+    }
+
+    alert("Checkout berhasil ✅ Total: Rp " + data.total.toLocaleString())
+
+    // kosongkan array TANPA reassign
+    keranjang.length = 0
+
+    renderKeranjang()
+    renderProducts()
+    updateBadge()
+
+    document.querySelector(".pop").style.display ="none"
+  })
+  .catch(err => {
+    console.error(err)
+    alert("Terjadi kesalahan")
+  })
+}
+
 
 
 if (window.innerWidth <= 768) {
