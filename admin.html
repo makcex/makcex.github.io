@@ -5,36 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Halaman Admin</title>
     <style>
-        body {
-            background: #f5f5f5;
-            display: grid;
-            justify-content: center;
-            align-items: center;
-            background-image: url(img/vs66uy7avujyqd2wpygv8d87i.jpg);
-            background-size: cover;
-            background-repeat: no-repeat;
-        }
-        .box {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            background: #f5f5f5;
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 8px;
-        }
-        input {
-            padding: 15px;
-            width: 100%;
-            margin-top: 10px;
-            background: rgba(255,255,255,0.2);
-            box-sizing: border-box;
-            border-radius: 8px;
-        }
+       body {
+    background: #f0f2f5; /* lembut dan profesional */
+    font-family: 'Arial', sans-serif;
+    color: #333;
+}
+.card {
+    background: rgba(255,255,255,0.95);
+}
+button {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+button:hover {
+    background: #0056b3;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 100%;
+    margin-top: 10px;
+    box-sizing: border-box;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+tr:nth-child(even) {
+    background: #f9f9f9;
+}
+th {
+    background: #007bff;
+    color: white;
+}
+@media (max-width: 768px) {
+    .box {
+        grid-template-columns: 1fr;
+    }
+}
+
 
         #laporan {
     background: rgba(255, 255, 255, 0.85); /* biar teks terlihat */
     padding: 15px;
-    margin-top: 20px;
+    top: 1rem;
+    bottom: 0;
     border-radius: 8px;
     max-height: 400px;
     overflow-y: auto;
@@ -203,8 +229,7 @@ fetch("/products")
 
 // tambah barang ke kasir
 function tambahKasir(){
-
-  const namaProduk = document.getElementById("produkKasir").value
+  const namaProduk = document.getElementById("produkKasir").value.trim()
   const jumlah = Number(document.getElementById("jumlahKasir").value)
 
   if(jumlah <= 0){
@@ -212,22 +237,35 @@ function tambahKasir(){
     return
   }
 
-  const produk = semuaProduk.find(p => 
+  // cari produk di list resmi
+  let produk = semuaProduk.find(p => 
     p.nama.toLowerCase() === namaProduk.toLowerCase()
   )
 
-  if(!produk){
-    alert("Produk tidak ditemukan")
-    return
-  }
+  let isManual = false
 
-  if(produk.stok < jumlah){
+  if(!produk){
+    // Produk belum ada → input harga manual
+    const hargaDefault = Number(prompt(`Produk "${namaProduk}" belum ada. Masukkan harga:`))
+    if(!hargaDefault || hargaDefault <= 0){
+      alert("Harga tidak valid")
+      return
+    }
+
+    produk = {
+      id: 'manual_' + Date.now(), // id unik sementara
+      nama: namaProduk,
+      harga: hargaDefault,
+      stok: Infinity // anggap stok tidak terbatas
+    }
+    isManual = true
+  } else if(produk.stok < jumlah){
     alert("Stok tidak cukup")
     return
   }
 
+  // tambah ke kasirCart
   const existing = kasirCart.find(i => i.id === produk.id)
-
   if(existing){
     existing.jumlah += jumlah
   } else {
@@ -235,12 +273,19 @@ function tambahKasir(){
       id: produk.id,
       nama: produk.nama,
       harga: produk.harga,
-      jumlah: jumlah
+      jumlah: jumlah,
+      manual: isManual // catat kalau produk manual
     })
+  }
+
+  // kurangi stok kalau produk resmi
+  if(!isManual){
+    produk.stok -= jumlah
   }
 
   renderKasir()
 }
+
 
 
 // tampilkan list kasir

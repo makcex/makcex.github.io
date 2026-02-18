@@ -2,17 +2,17 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="description" content="Bengkel Motor Honda dan Yamaha di Ds Perbo Layanan ganti oli, service motor, tambal ban, dan ganti sparepart, cepat terpercaya dan terjangkau">
-<meta name="keywords" content="bengkel motor perbo, bengkel honda perbo, benkel yamaha perbo, service motor desa perbo, ganti oli perbo, tambal ban perbo">
+<meta name="description" content="Bengkel Motor eral dan Rendi di Ds Perbo Layanan ganti oli, service motor, tambal ban, dan ganti sparepart, cepat terpercaya dan terjangkau">
+<meta name="keywords" content="bengkel motor eral dan Rendi desa perbo, bengkel motor perbo, bengkel motor desa perbo, bengkel eral perbo, benkel rendi perbo, bengkel motor honda dan yamaha desa perbo, service motor desa perbo, ganti oli perbo, tambal ban perbo">
 <meta name="author" content="benkel motor perbo">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta property="og:title" content="Bengkel Motor Honda & Yamaha Desa Perbo">
+<meta property="og:title" content="Bengkel Motor Eral dan Rendi Desa Perbo">
 <meta property="og:description" content="Layanan Service Motor, ganti oli,tambal ban, dan sparepart Honda dan Yamaha di desa perbo">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://makcex.githup.io/">
+<meta property="og:url" content="https://makcex.github.io/">
 <meta property="og:image" content="https://makcex.github.io/img/IMG_20260203_140709_148.jpg">
 <meta name="robots" content="index, follow">
-<title>Bengkel Motor Honda dan Yamaha desa Perbo | Service,Ganti oli & sparepart</title>
+<title>Bengkel Motor Eral dan Rendi desa Perbo | Service,Ganti oli & sparepart</title>
 
 <style>
 body {
@@ -43,8 +43,10 @@ header {
 /* CONTAINER */
 .container {
   overflow-y: auto;
+  top: 70px;
+  bottom: 20px;
   border: 1px solid rgba(255,255,255,0.15);
- position: relative;
+ position: fixed;
  margin-top: 100px;
   padding: 20px;
   width: 50%;
@@ -77,16 +79,28 @@ header {
 }
 
 .content {
-  background: rgba(255, 255, 255, 0.12);
-  position: fixed;
-  width: 200px;
-  right: 50px;
-  top: 150px;
-  border: 1px solid rgba(0,0,0,0.12);
+  position: relative;  /* scroll ikut parent */
+    overflow: visible;
+    padding: 0;
 }
 
 p {
   color: black;
+}
+
+.info {
+  position: fixed;
+    bottom: 0;
+    right: 50px;
+    width: 250px;
+    max-height: 75vh;
+    background: rgba(255,255,255,0.96);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -5px 20px rgba(0,0,0,.2);
+    padding: 15px;
+    overflow-y: auto;   /* scroll di desktop */
+    display: block;
+    z-index: 999;
 }
 
 .info li {
@@ -125,7 +139,7 @@ p {
   height: 600px;
   position: fixed;
   top: 110px;
-  background: rgba(255,255,255,0.52);
+  background: #ccc;
   border-radius: 8px;
   right: -500px;
   transition: all 0.3s ease-in-out;
@@ -178,7 +192,7 @@ button:hover {
 }
 
 .delet {
-  color: rgb(187, 11, 11);
+  color: red;
   position: absolute;
   right: 5px;
   top: 10px;
@@ -215,7 +229,7 @@ ul {
 .ticker {
   display: flex;
   width: max-content;
-  animation: scroll 50s linear infinite;
+  animation: scroll 80s linear infinite;
 }
 
 /* Teks yang berjalan */
@@ -264,9 +278,11 @@ ul {
 
   /* container produk */
   .container {
-    width: 100%;
+    position: fixed;
+    top: 60px;
+    bottom: 20px;
+    width: 90%;
     padding: 10px;
-    margin-top: 120px;
     overflow-y: auto;
   }
 
@@ -342,7 +358,7 @@ ul {
 <body>
 
 <header>
-  <h1>Bengkel Motor Honda & Yamaha Ds Perbo </h1>
+  <h1>Bengkel Motor Eral dan Rendi Ds Perbo </h1>
   
 <ul>
   <li class="krj" id="krjn">🛒 Keranjang
@@ -372,7 +388,7 @@ ul {
       murah dan bisa dipercaya
     </h2>
     <ul>
-      <li>Ganti oli</li>
+      <li>Ganti oli - Rp.50.000</li>
       <li>Service</li>
       <li>Tambal Ban</li>
       <li>Ganti SparePart</li>
@@ -380,9 +396,16 @@ ul {
     <hr>
     <h3>Alamat Bengkel</h3>
     <p>
-      Melayani berbagai keperluan perbaikan motor anda.<br>
-      Ds Perbo Simpang 4, sebelah Bengkel Mael
-    </p>
+      Ds Perbo perbatasan Batu Panco<br>
+      Kec. Curup Utara Kab. Rejang Lebong Prov. Bengkulu sebelah Bengkel Mael
+    </p><br>
+    <h3>Kontak & Info Tambahan</h3>
+  <p>Telepon/WA: 
+    <a href="https://wa.me/62895640227868" target="_blank" style="color:#25D366; font-weight:bold; text-decoration:none;">
+      0895-6402-27868
+    </a>
+  </p>
+  <p>Melayani berbagai keperluan perbaikan motor Anda dengan cepat dan terpercaya.</p>
   </div>
 </div>
 
@@ -442,12 +465,15 @@ html = ""
 products.forEach(item => {
   html += `
   <div class='card'>
-  <img src='/img/${item.foto}' loading="lazy"  alt='${item.nama}' width='200px' height='150px'-bengkel motor honda yamaha desa perbo>
-  <div class='card-body'>
-    <h4>${item.nama}</h4>
-    <p>stok: ${item.stok}</p>
-    <p class='price'>Rp ${item.harga}</p>
-    <button onclick='addToCart(${item.id})'>tambah ke keranjang</button>
+    <picture>
+      <source srcset='/img/${item.foto.replace('.jpg','.webp')}' type='image/webp'>
+      <img src='/img/${item.foto}' loading="lazy" alt='${item.nama}' width='200' height='150'>
+    </picture>
+    <div class='card-body'>
+      <h4>${item.nama}</h4>
+      <p>stok: ${item.stok}</p>
+      <p class='price'>Rp ${item.harga}</p>
+      <button onclick='addToCart(${item.id})'>tambah ke keranjang</button>
     </div>
   </div>`
 })
