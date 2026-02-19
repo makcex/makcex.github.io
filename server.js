@@ -132,28 +132,44 @@ const server = http.createServer((req, res) => {
 
     // ===== UPLOAD GAMBAR =====
     if(req.method === 'POST' && req.url === '/upload'){
-        if(!fs.existsSync('img')) fs.mkdirSync('img')
+    if(!fs.existsSync('img')) fs.mkdirSync('img')
 
-        const form = formidable({ uploadDir: path.join(__dirname, 'img'), keepExtensions: true })
+    const form = formidable({ uploadDir: path.join(__dirname, 'img'), keepExtensions: true })
 
-        form.parse(req, (err, fields, files) => {
-            if(err){
-                res.writeHead(500, {'Content-Type':'application/json'})
-                return res.end(JSON.stringify({success:false, message: err.message}))
-            }
-            if(!files.img){
-                res.writeHead(400, {'Content-Type':'application/json'})
-                return res.end(JSON.stringify({success:false, message:'File img tidak ditemukan'}))
-            }
-            const file = Array.isArray(files.img)? files.img[0] : files.img
-            const fileName = path.basename(file.filepath)
-            res.writeHead(200, {'Content-Type':'application/json'})
-            res.end(JSON.stringify({success:true, fileName}))
-        })
-        return
-    }
+    form.parse(req, async (err, fields, files) => {
+      if(err){
+        res.writeHead(500, {'Content-Type':'application/json'})
+        return res.end(JSON.stringify({success:false, message: err.message}))
+      }
+      if(!files.img){
+        res.writeHead(400, {'Content-Type':'application/json'})
+        return res.end(JSON.stringify({success:false, message:'File img tidak ditemukan'}))
+      }
 
-    // ===== CHECKOUT =====
+      const file = Array.isArray(files.img)? files.img[0] : files.img
+      const oldPath = file.filepath
+      const webpFileName = path.parse(file.newFilename || path.basename(oldPath)).name + '.webp'
+      const outputPath = path.join(__dirname, 'img', webpFileName)
+
+      try {
+        await sharp(oldPath)
+          .resize(500)
+          .webp({ quality: 75 })
+          .toFile(outputPath)
+
+        fs.unlinkSync(oldPath)
+
+        res.writeHead(200, {'Content-Type':'application/json'})
+        res.end(JSON.stringify({success:true, fileName: webpFileName}))
+
+      } catch (error) {
+        console.error('Error convert image:', error)
+        res.writeHead(500, {'Content-Type':'application/json'})
+        res.end(JSON.stringify({success:false, message: 'Gagal convert gambar'}))
+      }
+    })
+    return
+  }
     // ===== CHECKOUT =====
 if(req.method === 'POST' && req.url === '/checkout'){
     let body = ''

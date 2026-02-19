@@ -465,10 +465,12 @@ html = ""
 products.forEach(item => {
   html += `
   <div class='card'>
-    <picture>
-      <source srcset='/img/${item.foto.replace('.jpg','.webp')}' type='image/webp'>
-      <img src='/img/${item.foto}' loading="lazy" alt='${item.nama}' width='200' height='150'>
-    </picture>
+    <img 
+      src='/img/${item.foto.replace(/\.(jpg|jpeg|png)$/i, '.webp')}' 
+      loading="lazy" 
+      alt='${item.nama}' 
+      width='200' 
+      height='150'>
     <div class='card-body'>
       <h4>${item.nama}</h4>
       <p>stok: ${item.stok}</p>
