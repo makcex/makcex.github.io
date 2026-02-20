@@ -89,79 +89,93 @@ th {
         <button onclick="tambahProduk()">Simpan</button>
     </div>
 
-    <div>
-  <h3>Penjualan Toko (Kasir)</h3>
+    <!-- Kasir / Penjualan -->
+  <div>
+    <h3>Penjualan Toko (Kasir)</h3>
+    <input type="text" id="produkKasir" list="listProduk" placeholder="Ketik nama produk">
+    <datalist id="listProduk"></datalist>
+    <input type="number" id="jumlahKasir" placeholder="Jumlah">
+    <button onclick="tambahKasir()">Tambah</button>
 
-  <input type="text" id="produkKasir" list="listProduk" placeholder="Ketik nama produk">
-<datalist id="listProduk"></datalist>
+    <hr>
+    <h4>Barang / Jasa Khusus (tidak masuk toko online)</h4>
+    <input type="text" id="produkManual" placeholder="Nama barang/jasa">
+    <input type="number" id="hargaManual" placeholder="Harga">
+    <input type="number" id="jumlahManual" placeholder="Jumlah">
+    <input type="text" id="keteranganManual" placeholder="Keterangan (cash / ngutang / dp)">
+    <button onclick="tambahManual()">Tambah Manual</button>
 
-<input type="number" id="jumlahKasir" placeholder="Jumlah">
-<button onclick="tambahKasir()">Tambah</button>
+    <div id="listKasir"></div>
+    <h4 id="totalKasir">Total Cash: Rp 0 | Total Utang: Rp 0</h4>
 
-
-  <div id="listKasir"></div>
-  <h4 id="totalKasir">Total: Rp 0</h4>
-
-  <button onclick="bayarKasir()">Bayar</button>
+    <button onclick="bayarKasir()">Bayar</button>
+  </div>
 </div>
-</div>
+<button onclick="bayarKasirUtang()">Simpan Utang</button>
+<button onclick="bayarUtangServer()">Bayar Utang</button>
 <br>
 <div id="laporan">
-     <button onclick="loadTransaksi()">Lihat Transaksi</button>
-<table border="1">
+  <button onclick="loadTransaksi()">Lihat Transaksi</button>
+  <table border="1">
     <thead>
-    <tr>
+      <tr>
         <th>tanggal</th>
         <th>nama</th>
         <th>items</th>
+        <th>keterangan</th>
         <th>total</th>
-    </tr>
+      </tr>
     </thead>
     <tbody id="laporan1"></tbody>
-</table>
+  </table>
 </div>
-
     <script>
 
 function loadTransaksi() {
-    fetch('/admin-data?k=abc')
-    .then(res => {
-        if (!res.ok) throw new Error("Gagal ambil data admin");
-        return res.json();
+  fetch('/admin-data?k=abc')
+  .then(res => {
+    if (!res.ok) throw new Error("Gagal ambil data admin");
+    return res.json();
+  })
+  .then(data => {
+    const container = document.getElementById('laporan1')
+    container.innerHTML = ''
+
+    let totalOmzet = 0
+
+    data.forEach(tr => {
+      totalOmzet += tr.total
+
+      const tanggal = new Date(tr.tanggal).toLocaleString()
+
+      const itemsText = tr.cart.map(i => `${i.nama} x${i.jumlah}`).join(', ')
+      const keteranganText = tr.cart.map(i => i.keterangan || '-').join(', ')
+
+      container.innerHTML += `
+        <tr>
+          <td>${tanggal}</td>
+          <td>${tr.user.nama}</td>
+          <td>${itemsText}</td>
+          <td>${keteranganText}</td>
+          <td>Rp ${tr.total.toLocaleString()}</td>
+        </tr>
+      `
     })
-    .then(data => {
-         console.log("Data transaksi:", data);
-        const container = document.getElementById('laporan1')
-        container.innerHTML = ''
 
-        let totalOmzet = 0
-
-        data.forEach(tr => {
-            totalOmzet += tr.total
-
-            const tanggal = new Date(tr.tanggal).toLocaleString()
-            const items = tr.cart.map(i => `${i.nama} x${i.jumlah}`).join(', ')
-
-            container.innerHTML += `
-            <tr>
-                <td>${tanggal}</td>
-                <td>${tr.user.nama}</td>
-                <td>${items}</td>
-                <td>Rp ${tr.total.toLocaleString()}</td>
-                </tr>
-            `
-        })
-
-        container.innerHTML += `<h3>Total Omzet: Rp ${totalOmzet.toLocaleString()}</h3>`
-    })
-    .catch(err => {
-        console.error(err)
-        alert("Gagal ambil data transaksi")
-    })
+    // Tampilkan total omzet di bawah tabel
+    container.innerHTML += `
+      <tr>
+        <td colspan="4" style="text-align:right"><b>Total Omzet:</b></td>
+        <td><b>Rp ${totalOmzet.toLocaleString()}</b></td>
+      </tr>
+    `
+  })
+  .catch(err => {
+    console.error(err)
+    alert("Gagal ambil data transaksi")
+  })
 }
-
-
-        
+    
     function tambahProduk() {
     const fileInput = document.getElementById('img')
 
@@ -207,153 +221,279 @@ function loadTransaksi() {
     })
 }
 
-let kasirCart = []
 
-// load produk ke dropdown
-fetch("/products")
-.then(res => res.json())
-.then(data => {
-  semuaProduk = data
+// --- Produk online ---
+let semuaProduk = [];
+fetch("/products").then(r=>r.json()).then(d=>{
+    semuaProduk = d;
+    const datalist = document.getElementById("listProduk");
+    datalist.innerHTML = "";
+    d.forEach(p=>{ datalist.innerHTML += `<option value="${p.nama}">Stok: ${p.stok}</option>` });
+});
 
-  const datalist = document.getElementById("listProduk")
-  datalist.innerHTML = ""
+// --- Kasir Cart ---
+let kasirCart = [];
 
-  data.forEach(p => {
-    datalist.innerHTML += `
-      <option value="${p.nama}">
-        Stok: ${p.stok}
-      </option>
-    `
-  })
-})
-
-// tambah barang ke kasir
+// Tambah barang ke kasir
 function tambahKasir(){
-  const namaProduk = document.getElementById("produkKasir").value.trim()
-  const jumlah = Number(document.getElementById("jumlahKasir").value)
+    const namaProduk = document.getElementById("produkKasir").value.trim();
+    const jumlah = Number(document.getElementById("jumlahKasir").value);
 
-  if(jumlah <= 0){
-    alert("Jumlah tidak valid")
-    return
-  }
-
-  // cari produk di list resmi
-  let produk = semuaProduk.find(p => 
-    p.nama.toLowerCase() === namaProduk.toLowerCase()
-  )
-
-  let isManual = false
-
-  if(!produk){
-    // Produk belum ada → input harga manual
-    const hargaDefault = Number(prompt(`Produk "${namaProduk}" belum ada. Masukkan harga:`))
-    if(!hargaDefault || hargaDefault <= 0){
-      alert("Harga tidak valid")
-      return
+    if(!namaProduk || jumlah <= 0){
+        alert("Nama produk dan jumlah harus diisi");
+        return;
     }
 
-    produk = {
-      id: 'manual_' + Date.now(), // id unik sementara
-      nama: namaProduk,
-      harga: hargaDefault,
-      stok: Infinity // anggap stok tidak terbatas
-    }
-    isManual = true
-  } else if(produk.stok < jumlah){
-    alert("Stok tidak cukup")
-    return
-  }
+    let produk = semuaProduk.find(p =>
+        p.nama.toLowerCase() === namaProduk.toLowerCase()
+    );
 
-  // tambah ke kasirCart
-  const existing = kasirCart.find(i => i.id === produk.id)
-  if(existing){
-    existing.jumlah += jumlah
-  } else {
+    let isManual = false;
+
+    // Jika tidak ada di toko online → buat manual
+    if(!produk){
+        const hargaManual = Number(prompt(`Produk "${namaProduk}" tidak ada di toko.\nMasukkan harga:`));
+        if(!hargaManual || hargaManual <= 0){
+            alert("Harga tidak valid");
+            return;
+        }
+
+        produk = {
+            id: "manual_" + Date.now(),
+            nama: namaProduk,
+            harga: hargaManual,
+            stok: Infinity
+        };
+
+        isManual = true;
+    }
+
+    // Jika produk online cek stok
+    if(!isManual && produk.stok < jumlah){
+        alert("Stok tidak cukup");
+        return;
+    }
+
     kasirCart.push({
-      id: produk.id,
-      nama: produk.nama,
-      harga: produk.harga,
-      jumlah: jumlah,
-      manual: isManual // catat kalau produk manual
-    })
-  }
+        id: produk.id,
+        nama: produk.nama,
+        harga: produk.harga,
+        jumlah: jumlah,
+        manual: isManual
+    });
 
-  // kurangi stok kalau produk resmi
-  if(!isManual){
-    produk.stok -= jumlah
-  }
-
-  renderKasir()
-}
-
-
-
-// tampilkan list kasir
-function renderKasir(){
-  const list = document.getElementById("listKasir")
-  const totalEl = document.getElementById("totalKasir")
-
-  list.innerHTML = ""
-
-  kasirCart.forEach((i, index) => {
-    list.innerHTML += `
-      <p>
-        ${i.nama} - Rp ${i.harga} x ${i.jumlah}
-        <button onclick="hapusKasir(${index})" style="background:red;width:60px;">X</button>
-      </p>
-    `
-  })
-
-  const total = kasirCart.reduce((sum, i) => {
-    return sum + i.harga * i.jumlah
-  }, 0)
-
-  totalEl.innerText = "Total: Rp " + total.toLocaleString()
-}
-
-// hapus item sebelum bayar
-function hapusKasir(index){
-  kasirCart.splice(index, 1)
-  renderKasir()
-}
-
-// bayar
-function bayarKasir(){
-
-  if(kasirCart.length === 0){
-    alert("Belum ada barang")
-    return
-  }
-
-  fetch("/jual", {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ items: kasirCart })
-  })
-  .then(res => res.json())
-  .then(data => {
-
-    if(!data.success){
-      alert(data.message)
-      return
+    if(!isManual){
+        produk.stok -= jumlah;
     }
 
-    alert("Penjualan berhasil. Total: Rp " + data.total.toLocaleString())
+    document.getElementById("produkKasir").value = "";
+    document.getElementById("jumlahKasir").value = "";
 
-    kasirCart = []
-    renderKasir()
-    location.reload()
-  })
+    renderKasir();
 }
 
-window.onload = function(){
-    loadTransaksi()
+// Tambah manual
+function tambahManual(){
+    const nama = document.getElementById("produkManual").value.trim();
+    const harga = Number(document.getElementById("hargaManual").value);
+    const jumlah = Number(document.getElementById("jumlahManual").value);
+    const keterangan = document.getElementById("keteranganManual").value.trim() || "cash";
+
+    if(!nama || harga<=0 || jumlah<=0){ alert("Nama, harga, jumlah harus valid"); return; }
+
+    kasirCart.push({ id:'manual_'+Date.now(), nama, harga, jumlah, manual:true, keterangan });
+
+    document.getElementById("produkManual").value="";
+    document.getElementById("hargaManual").value="";
+    document.getElementById("jumlahManual").value="";
+    document.getElementById("keteranganManual").value="";
+
+    renderKasir();
 }
 
-// otomatis refresh transaksi setiap 5 detik
-setInterval(() => {
-    loadTransaksi()
-}, 10000)
+// Render list kasir
+function renderKasir(){
+    const list = document.getElementById("listKasir");
+    const totalEl = document.getElementById("totalKasir");
+
+    list.innerHTML = "";
+
+    let total = 0;
+
+    kasirCart.forEach((i, idx) => {
+        total += i.harga * i.jumlah;
+
+        list.innerHTML += `
+            <p>
+                ${i.nama} - Rp ${i.harga.toLocaleString()} x ${i.jumlah}
+                <button onclick="hapusKasir(${idx})" 
+                style="background:red;width:60px;">X</button>
+            </p>
+        `;
+    });
+
+    totalEl.innerText = `Total: Rp ${total.toLocaleString()}`;
+}
+
+// Hapus item kasir
+function hapusKasir(idx){ kasirCart.splice(idx,1); renderKasir(); }
+
+// Bayar kasir (offline + stok online terupdate)
+function bayarKasir(){
+    if(kasirCart.length===0){ alert("Belum ada barang"); return; }
+
+    const komfirmasi = confirm("yakin ingin menyimpan sebagai CASH | BOTONG TUN!")
+    if(!komfirmasi) return
+
+    fetch("/jual",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ items: kasirCart })
+    }).then(r=>r.json()).then(d=>{
+        if(!d.success) return alert(d.message);
+        alert("Transaksi berhasil. Total: Rp "+d.total.toLocaleString());
+        kasirCart=[];
+        renderKasir();
+        loadTransaksi();
+        fetch("/products").then(r=>r.json()).then(d=>semuaProduk=d);
+    });
+}
+
+// --- UTANG ---
+
+// Simpan utang
+function bayarKasirUtang(){
+    if(kasirCart.length === 0){
+        alert("Belum ada barang");
+        return;
+    }
+
+    const komfirmasi = confirm("yakin ingin menyimpan sebagai HUTANG | BOTONG TUN!")
+    if(!komfirmasi) return
+
+    const nama = prompt("Nama pembeli utang:");
+    if(!nama) return;
+
+    fetch('/utang', {
+        method:'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+            nama,
+            items: kasirCart
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        if(!data.success){
+            alert("Gagal simpan utang: "+data.message);
+            return;
+        }
+
+        alert("Utang berhasil dicatat. Total: Rp " + data.utang.total.toLocaleString());
+
+        kasirCart = [];
+        renderKasir();
+        loadTransaksi();
+    });
+}
+
+// Bayar utang yang sudah tercatat
+async function bayarUtangServer(){
+    try {
+        const res = await fetch('/get-utang');
+        const data = await res.json();
+        if(data.length === 0){ alert("Tidak ada utang"); return; }
+
+        let msg = "Utang:\n";
+        data.forEach((u,i)=> msg += `${i+1}. ${u.nama} - Rp ${u.total.toLocaleString()}\n`);
+        const pilih = Number(prompt(msg+"\nPilih nomor utang yang dibayar:"));
+        if(!pilih || pilih < 1 || pilih > data.length) return;
+
+        const utang = data[pilih-1];
+        const bayar = Number(prompt(`Total utang: Rp ${utang.total.toLocaleString()}\nMasukkan jumlah bayar:`));
+        if(!bayar || bayar <= 0) return;
+
+        const resBayar = await fetch('/bayar-utang',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({id: utang.id, jumlahBayar: bayar})
+        });
+        const resData = await resBayar.json();
+        if(!resData.success){ alert("Gagal bayar utang: "+resData.message); return; }
+
+        alert("Berhasil bayar. Sisa utang: Rp "+resData.sisa.toLocaleString());
+        loadTransaksi(); // update UI
+    } catch(err) {
+        console.error(err);
+        alert("Gagal bayar utang");
+    }
+}
+
+// --- Load transaksi & gabungkan utang ---
+async function loadTransaksi() {
+    try {
+        const res1 = await fetch('/admin-data?k=abc');
+        const checkout = await res1.json();
+
+        const res2 = await fetch('/get-utang');
+        const utang = await res2.json();
+
+        const data = [...checkout];
+        utang.forEach(u => {
+            data.push({
+                id: u.id,
+                user: { nama: u.nama },
+                cart: u.cart,
+                total: u.total,
+                tanggal: u.tanggal,
+                tipe: 'utang'
+            });
+        });
+
+        data.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+        const container = document.getElementById('laporan1');
+        container.innerHTML = '';
+
+        let totalOmzet = 0;
+        let totalUtang = 0;
+
+        data.forEach(tr => {
+            const tanggal = new Date(tr.tanggal).toLocaleString();
+            const itemsText = tr.cart.map(i => `${i.nama} x${i.jumlah}`).join(', ');
+            const keteranganText = tr.cart.map(i => i.keterangan || '-').join(', ');
+
+            container.innerHTML += `
+                <tr>
+                    <td>${tanggal}</td>
+                    <td>${tr.user.nama}</td>
+                    <td>${itemsText}</td>
+                    <td>${keteranganText}</td>
+                    <td>Rp ${tr.total.toLocaleString()}</td>
+                </tr>
+            `;
+
+            if(tr.tipe === 'utang') totalUtang += tr.total;
+            else totalOmzet += tr.total;
+        });
+
+        container.innerHTML += `
+            <tr>
+                <td colspan="4" style="text-align:right"><b>Total Omzet:</b></td>
+                <td><b>Rp ${totalOmzet.toLocaleString()}</b></td>
+            </tr>
+            <tr>
+                <td colspan="4" style="text-align:right"><b>Total Utang:</b></td>
+                <td><b>Rp ${totalUtang.toLocaleString()}</b></td>
+            </tr>
+        `;
+    } catch(err) {
+        console.error(err);
+        alert("Gagal ambil data transaksi");
+    }
+}
+window.onload=()=>{ loadTransaksi(); }
+setInterval(()=>{ loadTransaksi(); },10000);
 
 
 </script>

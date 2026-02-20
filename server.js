@@ -18,6 +18,19 @@ if (fs.existsSync(dataFile)) {
         console.error('Gagal membaca products.json', err)
     }
 }
+        // ===== DATA UTANG =====
+const utangFile = path.join(__dirname, 'utang.json')
+const utangData = []
+
+if (fs.existsSync(utangFile)) {
+    try {
+        const raw = fs.readFileSync(utangFile)
+        const jsonData = JSON.parse(raw)
+        utangData.push(...jsonData)
+    } catch(err) {
+        console.error('Gagal membaca utang.json', err)
+    }
+}
 
 // ===== DATA CHECKOUT =====
 const checkoutFile = path.join(__dirname, 'checkout.json')
@@ -189,23 +202,34 @@ if(req.method === 'POST' && req.url === '/checkout'){
             return res.end(JSON.stringify({success:false, message:'Data checkout tidak lengkap'}))
         }
 
-        // CEK STOK
-        for(let item of keranjang){
-            const p = products.find(prod => prod.id === item.id)
-            if(!p || p.stok < item.jumlah){
-                res.writeHead(400, {'Content-Type':'application/json'})
-                return res.end(JSON.stringify({
-                    success:false,
-                    message:`Stok ${item.nama} tidak cukup`
-                }))
-            }
-        }
+        // CEK STOK DULU
+for(let item of items){
+
+    // ✅ Lewati barang manual
+    if(item.manual) continue
+
+    const produk = products.find(p => p.id === item.id)
+
+    if(!produk || produk.stok < item.jumlah){
+        res.writeHead(400, {'Content-Type':'application/json'})
+        return res.end(JSON.stringify({
+            success:false,
+            message:`Stok ${item.nama} tidak cukup`
+        }))
+    }
+}
 
         // UPDATE STOK PRODUK (server-side)
         keranjang.forEach(item => {
-            const p = products.find(prod => prod.id === item.id)
-            if(p) p.stok -= item.jumlah
-        })
+
+    // ✅ Jangan kurangi stok kalau manual
+    if(item.manual) return
+
+    const produk = products.find(p => p.id === item.id)
+    if(produk){
+        produk.stok -= item.jumlah
+    }
+})
         fs.writeFile(dataFile, JSON.stringify(products, null, 2), err => {
     if(err) console.error('Gagal menyimpan products.json', err)
 })
@@ -262,25 +286,48 @@ if(req.method === 'POST' && req.url === '/jual'){
                 message:'Data penjualan kosong'
             }))
         }
+        console.log("DATA MASUK /jual:");
+console.log(JSON.stringify(items, null, 2));
 
         // CEK STOK DULU
-        for(let item of items){
-            const produk = products.find(p => p.id === item.id)
+for(let item of items){
 
-            if(!produk || produk.stok < item.jumlah){
-                res.writeHead(400, {'Content-Type':'application/json'})
-                return res.end(JSON.stringify({
-                    success:false,
-                    message:`Stok ${item.nama} tidak cukup`
-                }))
-            }
-        }
+    // ✅ LEWATI BARANG MANUAL
+    if(item.manual){
+        console.log("Lewati manual:", item.nama);
+        continue;
+    }
+
+    const produk = products.find(p => String(p.id) === String(item.id))
+
+    if(!produk){
+        res.writeHead(400, {'Content-Type':'application/json'})
+        return res.end(JSON.stringify({
+            success:false,
+            message:`Produk ${item.nama} tidak ditemukan`
+        }))
+    }
+
+    if(produk.stok < item.jumlah){
+        res.writeHead(400, {'Content-Type':'application/json'})
+        return res.end(JSON.stringify({
+            success:false,
+            message:`Stok ${item.nama} tidak cukup`
+        }))
+    }
+}
+
 
         // UPDATE STOK
-        items.forEach(item => {
-            const produk = products.find(p => p.id === item.id)
-            produk.stok -= item.jumlah
-        })
+       items.forEach(item => {
+
+    if(item.manual) return;
+
+    const produk = products.find(p => String(p.id) === String(item.id))
+    if(produk){
+        produk.stok -= item.jumlah
+    }
+})
         fs.writeFile(dataFile, JSON.stringify(products, null, 2), err => {
     if(err) console.error('Gagal menyimpan products.json', err)
 })
@@ -328,6 +375,144 @@ if(req.method === 'POST' && req.url === '/jual'){
         res.writeHead(200, {'Content-Type':'application/json'})
         return res.end(JSON.stringify(checkoutData))
     }
+
+// ===== POST UTANG =====
+if(req.method === 'POST' && req.url === '/utang'){
+    let body = ''
+    req.on('data', chunk => body += chunk)
+    req.on('end', () => {
+        let data
+        try {
+            data = JSON.parse(body)
+        } catch {
+            res.writeHead(400, {'Content-Type':'application/json'})
+            return res.end(JSON.stringify({success:false, message:'JSON salah'}))
+        }
+
+        const { items, nama, keterangan } = data
+        if(!items || items.length === 0 || !nama){
+            res.writeHead(400, {'Content-Type':'application/json'})
+            return res.end(JSON.stringify({success:false, message:'Data utang tidak lengkap'}))
+        }
+
+        // kurangi stok hanya untuk barang yang bukan manual
+        items.forEach(item => {
+            if(item.manual) return; // barang manual tidak kurangi stok
+            const produk = products.find(p => String(p.id) === String(item.id))
+            if(produk) produk.stok -= item.jumlah
+        })
+        fs.writeFileSync(dataFile, JSON.stringify(products, null, 2))
+
+        // simpan utang
+        const utang = {
+            id: Date.now(),
+            nama,
+            keterangan: keterangan || 'utang',
+            cart: items,
+            total: items.reduce((sum,i)=>sum+i.harga*i.jumlah,0),
+            tanggal: new Date().toISOString()
+        }
+        utangData.push(utang)
+        fs.writeFileSync(utangFile, JSON.stringify(utangData, null, 2))
+
+        res.writeHead(200, {'Content-Type':'application/json'})
+        res.end(JSON.stringify({success:true, utang}))
+    })
+    return
+}
+
+// ===== BAYAR UTANG =====
+if(req.method === 'POST' && req.url === '/bayar-utang'){
+    let body = ''
+    req.on('data', chunk => body += chunk)
+    req.on('end', () => {
+        let data
+        try {
+            data = JSON.parse(body)
+        } catch {
+            res.writeHead(400, {'Content-Type':'application/json'})
+            return res.end(JSON.stringify({success:false, message:'JSON salah'}))
+        }
+
+        let { id, jumlahBayar } = data
+        if(!id || !jumlahBayar || jumlahBayar <= 0){
+            res.writeHead(400, {'Content-Type':'application/json'})
+            return res.end(JSON.stringify({success:false, message:'Data bayar utang tidak valid'}))
+        }
+
+        const utang = utangData.find(u => String(u.id) === String(id))
+        if(!utang){
+            res.writeHead(404, {'Content-Type':'application/json'})
+            return res.end(JSON.stringify({success:false, message:'Utang tidak ditemukan'}))
+        }
+
+        if(jumlahBayar >= utang.total){
+            // lunas → hapus dari utangData
+            const index = utangData.indexOf(utang)
+            utangData.splice(index,1)
+        } else {
+            // bayar sebagian → kurangi total
+            utang.total -= jumlahBayar
+        }
+
+        fs.writeFileSync(utangFile, JSON.stringify(utangData, null, 2))
+        res.writeHead(200, {'Content-Type':'application/json'})
+        res.end(JSON.stringify({success:true, sisa: utang.total || 0}))
+    })
+    return
+}
+
+// ===== GET DATA UTANG =====
+if(req.method === 'GET' && req.url.startsWith('/get-utang')){
+    res.writeHead(200, {'Content-Type':'application/json'})
+    return res.end(JSON.stringify(utangData))
+}
+// ===== BAYAR UTANG =====
+if(req.method === 'POST' && req.url === '/bayar-utang'){
+    let body = ''
+    req.on('data', chunk => body += chunk)
+    req.on('end', () => {
+        let data
+        try {
+            data = JSON.parse(body)
+        } catch {
+            res.writeHead(400, {'Content-Type':'application/json'})
+            return res.end(JSON.stringify({success:false, message:'JSON salah'}))
+        }
+
+        let { id, jumlahBayar } = data
+        if(!id || !jumlahBayar || jumlahBayar <= 0){
+            res.writeHead(400, {'Content-Type':'application/json'})
+            return res.end(JSON.stringify({success:false, message:'Data bayar utang tidak valid'}))
+        }
+
+        const utang = utangData.find(u => String(u.id) === String(id))
+        if(!utang){
+            res.writeHead(404, {'Content-Type':'application/json'})
+            return res.end(JSON.stringify({success:false, message:'Utang tidak ditemukan'}))
+        }
+
+        if(jumlahBayar >= utang.total){
+            // lunas → hapus dari utangData
+            const index = utangData.indexOf(utang)
+            utangData.splice(index,1)
+        } else {
+            // bayar sebagian → kurangi total
+            utang.total -= jumlahBayar
+        }
+
+        fs.writeFileSync(utangFile, JSON.stringify(utangData, null, 2))
+        res.writeHead(200, {'Content-Type':'application/json'})
+        res.end(JSON.stringify({success:true, sisa: utang.total || 0}))
+    })
+    return
+}
+
+// ===== GET DATA UTANG =====
+if(req.method === 'GET' && req.url.startsWith('/get-utang')){
+    res.writeHead(200, {'Content-Type':'application/json'})
+    return res.end(JSON.stringify(utangData))
+}
 
     // ===== DEFAULT 404 =====
     res.writeHead(404)
