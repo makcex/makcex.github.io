@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "id": 1771780775281,
+    "user": {
+      "nama": "rice",
+      "hp": "081372817281",
+      "alamat": "desa perbo"
+    },
+    "cart": [
+      {
+        "id": 1771780682124,
+        "nama": "acesories",
+        "harga": 10000,
+        "jumlah": 1
+      },
+      {
+        "id": 1771780562250,
+        "nama": "ban",
+        "harga": 20000,
+        "jumlah": 1
+      }
+    ],
+    "total": 30000,
+    "tanggal": "2026-02-22T17:19:35.281Z"
+  }
+]

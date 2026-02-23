@@ -3,6 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const { formidable } = require('formidable')
 const PORT = process.env.PORT || 3000
+const sharp = require('sharp');
 
 // ===== DATA PRODUK =====
 const products = []
@@ -84,7 +85,7 @@ const server = http.createServer((req, res) => {
                 return res.end('Gambar tidak ditemukan')
             }
             const ext = path.extname(imgPath)
-            const mimeTypes = { '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.png':'image/png' }
+            const mimeTypes = { '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.png':'image/png','.webp':'image/webp' }
             res.writeHead(200, {'Content-Type': mimeTypes[ext] || 'application/octet-stream'})
             res.end(data)
         })
@@ -203,7 +204,7 @@ if(req.method === 'POST' && req.url === '/checkout'){
         }
 
         // CEK STOK DULU
-for(let item of items){
+for(let item of keranjang){
 
     // ✅ Lewati barang manual
     if(item.manual) continue

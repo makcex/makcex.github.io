@@ -18,10 +18,7 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background-image: url(img/IMG_20260203_140709_148.jpg);
-  background-size: contain;      /* menutupi seluruh layar */
-  background-repeat: no-repeat; /* jangan diulang */
-  background-position: right; 
+  background: rgba(255, 255, 255, 0); 
   overflow-y: hidden;
 }
 
@@ -62,7 +59,8 @@ header {
 
 /* CARD */
 .card {
-  background: white;
+  background: rgba(255,255,255,0.96);
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
   border-radius: 6px;
   overflow: hidden;
   
@@ -96,7 +94,7 @@ p {
     max-height: 75vh;
     background: rgba(255,255,255,0.96);
     border-radius: 20px 20px 0 0;
-    box-shadow: 0 -5px 20px rgba(0,0,0,.2);
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
     padding: 15px;
     overflow-y: auto;   /* scroll di desktop */
     display: block;
@@ -409,10 +407,10 @@ ul {
   </div>
 </div>
 
-<div class="pop" style="z-index: 9999; min-width: 300px; min-height: 60vh; display: none; position: absolute; left: 2rem; bottom: 2rem;">
-  <input type="text" id="nama" placeholder="isi nama"><br>
-  <input type="number" id="hp"><br>
-  <textarea name="" id="alamat" cols="30" rows="10">alamat</textarea>
+<div class="pop" style="z-index: 9999; min-width: 300px; min-height: 60vh; display: none; position: absolute; left: 50%;">
+  <input type="text" id="nama" placeholder="isi nama" style="padding: 0.5rem 0.25rem;"><br>
+  <input type="number" id="hp" placeholder="Nomor HP"><br>
+  <textarea name="" id="alamat" cols="30" rows="10" style="width: 100%;">alamat</textarea>
   <button onclick="kirim()">kirim</button>
 </div>
 
@@ -466,7 +464,7 @@ products.forEach(item => {
   html += `
   <div class='card'>
     <img 
-      src='/img/${item.foto.replace(/\.(jpg|jpeg|png)$/i, '.webp')}' 
+      src='${item.foto ? "/img/" + item.foto : "/img/no-image.png"}'  
       loading="lazy" 
       alt='${item.nama}' 
       width='200' 
@@ -583,6 +581,7 @@ function checkout() {
   return alert('keranjang kosong')
   }
   document.querySelector(".pop").style.display ="block"
+  belanja.classList.remove("active")
 }
 
 function kirim() {
