@@ -407,11 +407,19 @@ ul {
   </div>
 </div>
 
-<div class="pop" style="z-index: 9999; min-width: 300px; min-height: 60vh; display: none; position: absolute; left: 50%;">
-  <input type="text" id="nama" placeholder="isi nama" style="padding: 0.5rem 0.25rem;"><br>
-  <input type="number" id="hp" placeholder="Nomor HP"><br>
-  <textarea name="" id="alamat" cols="30" rows="10" style="width: 100%;">alamat</textarea>
+<div class="pop" style="z-index: 9999; background: #fff; box-shadow: 0 5px 20px rgba(0,0,0,.3); width: 90%; max-width: 400px; padding: 20px; display: none; position: fixed; top: 0; left: 0;">
+  <h3>Isi Alamat Pengantaran</h3>
+  <label for="nama" style="margin-top: 10px; margin-bottom: 5px; font-weight: bold;">Nama:</label><br>
+    <input type="text" id="nama" placeholder="Isi nama" style="padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 5px;" required><br>
+
+    <label for="hp" style="margin-top: 10px; margin-bottom: 5px; font-weight: bold;">Nomor HP:</label><br>
+    <input type="tel" id="hp" placeholder="0812xxxx" style="padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 5px;" required><br>
+
+    <label for="alamat" style="margin-top: 10px; margin-bottom: 5px; font-weight: bold;">Alamat:</label><br>
+    <textarea id="alamat" rows="4" placeholder="Alamat lengkap" style="padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 5px;" required></textarea>
+
   <button onclick="kirim()">kirim</button>
+  <button onclick="tutup()">batal</button>
 </div>
 
 <div class="keranjang" id="belanjaan">
@@ -460,7 +468,9 @@ function renderProducts() {
 const list = document.getElementById('productList')
 html = ""
 
-products.forEach(item => {
+products
+.filter(item => item.stok > 0)
+.forEach(item => {
   html += `
   <div class='card'>
     <img 
@@ -546,10 +556,7 @@ function hapus(index) {
   produk.stok += item.jumlah   // stok balik
   keranjang.splice(index, 1)
 
-  document.querySelector(".pop").style.display ="none"
-  document.getElementById("nama").value = "";
-        document.getElementById("hp").value = "";
-        document.getElementById("alamat").value = "";
+ 
   renderKeranjang()
   renderProducts()
   updateBadge()
@@ -582,6 +589,12 @@ function checkout() {
   }
   document.querySelector(".pop").style.display ="block"
   belanja.classList.remove("active")
+}
+function tutup() {
+  document.querySelector(".pop").style.display ="none"
+  document.getElementById("nama").value = "";
+        document.getElementById("hp").value = "";
+        document.getElementById("alamat").value = "";
 }
 
 function kirim() {

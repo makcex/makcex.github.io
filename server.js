@@ -245,7 +245,9 @@ for(let item of keranjang){
             user,
             cart: keranjang,
             total,
-            tanggal: new Date().toISOString()
+            tanggal: new Date().toISOString(),
+            tipe: "online",
+            status: "pending"
         })
 
         // SIMPAN KE FILE checkout.json agar permanen
@@ -346,7 +348,8 @@ for(let item of items){
             cart: items,
             total,
             tanggal: new Date().toISOString(),
-            tipe: "offline"
+            tipe: "offline",
+            status: "selesai"
         })
 
         fs.writeFile(checkoutFile, JSON.stringify(checkoutData, null, 2), err => {
@@ -361,6 +364,37 @@ for(let item of items){
         }))
     })
 
+    return
+}
+
+// ===== UPDATE STATUS ORDER =====
+if(req.method === 'POST' && req.url === '/update-status'){
+    let body = ''
+    req.on('data', chunk => body += chunk)
+    req.on('end', () => {
+        let data
+        try {
+            data = JSON.parse(body)
+        } catch {
+            res.writeHead(400, {'Content-Type':'application/json'})
+            return res.end(JSON.stringify({success:false}))
+        }
+
+        const { id, status } = data
+
+        const trx = checkoutData.find(t => String(t.id) === String(id))
+        if(!trx){
+            res.writeHead(404, {'Content-Type':'application/json'})
+            return res.end(JSON.stringify({success:false, message:'Tidak ditemukan'}))
+        }
+
+        trx.status = status
+
+        fs.writeFileSync(checkoutFile, JSON.stringify(checkoutData, null, 2))
+
+        res.writeHead(200, {'Content-Type':'application/json'})
+        res.end(JSON.stringify({success:true}))
+    })
     return
 }
 
@@ -468,51 +502,20 @@ if(req.method === 'GET' && req.url.startsWith('/get-utang')){
     res.writeHead(200, {'Content-Type':'application/json'})
     return res.end(JSON.stringify(utangData))
 }
-// ===== BAYAR UTANG =====
-if(req.method === 'POST' && req.url === '/bayar-utang'){
-    let body = ''
-    req.on('data', chunk => body += chunk)
-    req.on('end', () => {
-        let data
-        try {
-            data = JSON.parse(body)
-        } catch {
-            res.writeHead(400, {'Content-Type':'application/json'})
-            return res.end(JSON.stringify({success:false, message:'JSON salah'}))
-        }
 
-        let { id, jumlahBayar } = data
-        if(!id || !jumlahBayar || jumlahBayar <= 0){
-            res.writeHead(400, {'Content-Type':'application/json'})
-            return res.end(JSON.stringify({success:false, message:'Data bayar utang tidak valid'}))
-        }
+// ===== RESET TRANSAKSI =====
+if(req.method === 'DELETE' && req.url === '/reset-transaksi'){
 
-        const utang = utangData.find(u => String(u.id) === String(id))
-        if(!utang){
-            res.writeHead(404, {'Content-Type':'application/json'})
-            return res.end(JSON.stringify({success:false, message:'Utang tidak ditemukan'}))
-        }
+    // kosongkan array di memory
+    checkoutData.length = 0
+    utangData.length = 0
 
-        if(jumlahBayar >= utang.total){
-            // lunas → hapus dari utangData
-            const index = utangData.indexOf(utang)
-            utangData.splice(index,1)
-        } else {
-            // bayar sebagian → kurangi total
-            utang.total -= jumlahBayar
-        }
+    // kosongkan file
+    fs.writeFileSync(checkoutFile, JSON.stringify([], null, 2))
+    fs.writeFileSync(utangFile, JSON.stringify([], null, 2))
 
-        fs.writeFileSync(utangFile, JSON.stringify(utangData, null, 2))
-        res.writeHead(200, {'Content-Type':'application/json'})
-        res.end(JSON.stringify({success:true, sisa: utang.total || 0}))
-    })
-    return
-}
-
-// ===== GET DATA UTANG =====
-if(req.method === 'GET' && req.url.startsWith('/get-utang')){
     res.writeHead(200, {'Content-Type':'application/json'})
-    return res.end(JSON.stringify(utangData))
+    return res.end(JSON.stringify({success:true}))
 }
 
     // ===== DEFAULT 404 =====

@@ -71,7 +71,24 @@ th {
     gap: 0.5rem;
 }
 
+#user-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.8rem;
+    padding: 5px;
+}
 
+.user-card {
+    background: rgba(255,255,255,0.95);
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+.user-card h4 { margin: 0 0 5px 0; color:#007bff; }
+.user-card p { margin:2px 0; font-size:14px; }
 
     </style>
 </head>
@@ -129,6 +146,9 @@ th {
     <tbody id="laporan1"></tbody>
   </table>
 </div>
+<button onclick="reset()">Reset Transaksi</button><br>
+<h3>Daftar User</h3>
+<div id="user-list" style="max-height:400px; overflow-y:auto;"></div>
     <script>
 
 function loadTransaksi() {
@@ -473,8 +493,14 @@ async function loadTransaksi() {
                 </tr>
             `;
 
-            if(tr.tipe === 'utang') totalUtang += tr.total;
-            else totalOmzet += tr.total;
+            if(tr.tipe === 'utang'){
+    totalUtang += tr.total;
+}
+else if(tr.tipe === 'online' && tr.status === 'selesai'){
+    totalOmzet += tr.total; // 🔥 hanya selesai yang dihitung
+}else if(tr.tipe === 'offline') {
+        totalOmzet += tr.total; // ✅ offline langsung masuk omzet
+    }
         });
 
         container.innerHTML += `
@@ -487,10 +513,86 @@ async function loadTransaksi() {
                 <td><b>Rp ${totalUtang.toLocaleString()}</b></td>
             </tr>
         `;
+        renderUserList(checkout);
     } catch(err) {
         console.error(err);
         alert("Gagal ambil data transaksi");
     }
+}
+
+async function updateStatus(id, status){
+    if(!confirm("Yakin ubah status?")) return
+
+    await fetch('/update-status',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ id, status })
+    })
+
+    loadTransaksi()
+}
+async function reset() {
+    const konfirmasi = confirm("Yakin ingin menghapus SEMUA transaksi dan utang?");
+    if (!konfirmasi) return;
+
+    try {
+        const res = await fetch('/reset-transaksi', {
+            method: 'DELETE'
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+            alert("Gagal reset: " + data.message);
+            return;
+        }
+
+        alert("Semua transaksi berhasil dihapus ✅");
+
+        // kosongkan tabel
+        document.getElementById("laporan1").innerHTML = "";
+        
+        // reload data
+        loadTransaksi();
+
+    } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan saat reset");
+    }
+}
+
+function renderUserList(checkoutData){
+    const container = document.getElementById('user-list');
+    container.innerHTML = '';
+
+    // 🔥 hanya online + pending
+    const onlinePending = checkoutData.filter(tr =>
+        tr.tipe === 'online' && tr.status === 'pending'
+    );
+
+    onlinePending.forEach(tr => {
+
+        const div = document.createElement('div');
+        div.className = 'user-card';
+
+        div.innerHTML = `
+            <h4>${tr.nama || '-'}</h4>
+            <p>HP: ${tr.hp || '-'}</p>
+            <p>Total: Rp ${tr.total.toLocaleString()}</p>
+            <p>Status: pending</p>
+
+            <button onclick="updateStatus(${tr.id}, 'selesai')">
+                Selesai
+            </button>
+
+            <button onclick="updateStatus(${tr.id}, 'batal')" 
+                style="background:red">
+                Batal
+            </button>
+        `;
+
+        container.appendChild(div);
+    });
 }
 window.onload=()=>{ loadTransaksi(); }
 setInterval(()=>{ loadTransaksi(); },10000);
