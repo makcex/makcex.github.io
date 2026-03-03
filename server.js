@@ -58,16 +58,8 @@ const routes = {
 const server = http.createServer((req, res) => {
 
     if (req.url === '/google0498f0468e07c462.html') {
-    const filePath = path.join(__dirname, 'google0498f0468e07c462.html');
-    fs.readFile(filePath, (err, data) => {
-        if (err) {
-            res.writeHead(404, { 'Content-Type': 'text/plain' });
-            return res.end('File not found');
-        }
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(data);
-    });
-    return;
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    return res.end('google-site-verification: google0498f0468e07c462.html');
 }
 
     // ===== HALAMAN ADMIN =====
