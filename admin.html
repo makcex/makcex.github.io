@@ -46,7 +46,7 @@ tr:nth-child(even) {
     background: #f9f9f9;
 }
 th {
-    background: #007bff;
+    background: lch(24.58% 22.44 270.53);
     color: white;
 }
 @media (max-width: 768px) {
@@ -125,11 +125,11 @@ th {
     <div id="listKasir"></div>
     <h4 id="totalKasir">Total Cash: Rp 0 | Total Utang: Rp 0</h4>
 
-    <button onclick="bayarKasir()">Bayar</button>
+    <button onclick="bayarKasir()" style="background: goldenrod; min-width: 250px;margin-bottom: 1rem;">Bayar</button>
   </div>
 </div>
-<button onclick="bayarKasirUtang()">Simpan Utang</button>
-<button onclick="bayarUtangServer()">Bayar Utang</button>
+<button onclick="bayarKasirUtang()" style="background: red;">Simpan Utang</button>
+<button onclick="bayarUtangServer()" style="background: red;">Bayar Utang</button>
 <br>
 <div id="laporan">
   <button onclick="loadTransaksi()">Lihat Transaksi</button>
@@ -146,7 +146,26 @@ th {
     <tbody id="laporan1"></tbody>
   </table>
 </div>
-<button onclick="reset()">Reset Transaksi</button><br>
+
+<div>
+  <h3>Pengeluaran</h3>
+  <input type="text" id="ketPengeluaran" placeholder="Keterangan">
+  <input type="number" id="jumlahPengeluaran" placeholder="Jumlah (Rp)">
+  <button onclick="tambahPengeluaran()" style="background: brown;">Tambah Pengeluaran</button>
+
+  <h4>Histori Pengeluaran</h4>
+  <table border="1" id="listPengeluaran">
+    <thead>
+      <tr>
+        <th>Tanggal</th>
+        <th>Keterangan</th>
+        <th>Jumlah</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<button onclick="reset()" style="background: #333;">Reset Transaksi</button><br>
 <h3>Daftar User</h3>
 <div id="user-list" style="max-height:400px; overflow-y:auto;"></div>
     <script>
@@ -195,7 +214,7 @@ function loadTransaksi() {
     alert("Gagal ambil data transaksi")
   })
 }
-    
+
     function tambahProduk() {
     const fileInput = document.getElementById('img')
 
@@ -451,75 +470,136 @@ async function bayarUtangServer(){
 
 // --- Load transaksi & gabungkan utang ---
 async function loadTransaksi() {
-    try {
+    try{
+        // ambil data checkout
         const res1 = await fetch('/admin-data?k=abc');
         const checkout = await res1.json();
 
-        const res2 = await fetch('/get-utang');
-        const utang = await res2.json();
+        // ambil data pengeluaran
+        const res2 = await fetch('/pengeluaran');
+        const pengeluaran = await res2.json();
 
-        const data = [...checkout];
-        utang.forEach(u => {
-            data.push({
-                id: u.id,
-                user: { nama: u.nama },
-                cart: u.cart,
-                total: u.total,
-                tanggal: u.tanggal,
-                tipe: 'utang'
-            });
-        });
-
-        data.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
+        // ambil data utang (tetap dari server utang)
+        const res3 = await fetch('/get-utang');
+        const utang = await res3.json();
 
         const container = document.getElementById('laporan1');
         container.innerHTML = '';
 
-        let totalOmzet = 0;
+        let totalOmzetRaw = 0;
         let totalUtang = 0;
 
-        data.forEach(tr => {
-            const tanggal = new Date(tr.tanggal).toLocaleString();
-            const itemsText = tr.cart.map(i => `${i.nama} x${i.jumlah}`).join(', ');
-            const keteranganText = tr.cart.map(i => i.keterangan || '-').join(', ');
+        // transaksi checkout
+        checkout.forEach(tr=>{
+            if(tr.tipe==='offline' || (tr.tipe==='online' && tr.status==='selesai')){
+                totalOmzetRaw += tr.total;
+            }
+            const itemsText = tr.cart.map(i=>`${i.nama} x${i.jumlah}`).join(', ');
+            const keteranganText = tr.cart.map(i=>i.keterangan||'-').join(', ');
 
             container.innerHTML += `
-                <tr>
-                    <td>${tanggal}</td>
-                    <td>${tr.user.nama}</td>
-                    <td>${itemsText}</td>
-                    <td>${keteranganText}</td>
-                    <td>Rp ${tr.total.toLocaleString()}</td>
-                </tr>
+            <tr>
+                <td>${new Date(tr.tanggal).toLocaleString()}</td>
+                <td>${tr.user.nama}</td>
+                <td>${itemsText}</td>
+                <td>${keteranganText}</td>
+                <td>Rp ${tr.total.toLocaleString()}</td>
+            </tr>
             `;
-
-            if(tr.tipe === 'utang'){
-    totalUtang += tr.total;
-}
-else if(tr.tipe === 'online' && tr.status === 'selesai'){
-    totalOmzet += tr.total; // 🔥 hanya selesai yang dihitung
-}else if(tr.tipe === 'offline') {
-        totalOmzet += tr.total; // ✅ offline langsung masuk omzet
-    }
         });
 
+        // hitung total utang
+        utang.forEach(u=>{
+            totalUtang += u.total;
+            const itemsText = u.cart.map(i=>`${i.nama} x${i.jumlah}`).join(', ');
+            const keteranganText = u.cart.map(i=>i.keterangan||'-').join(', ');
+
+            container.innerHTML += `
+            <tr>
+                <td>${new Date(u.tanggal).toLocaleString()}</td>
+                <td>${u.nama}</td>
+                <td>${itemsText}</td>
+                <td>${keteranganText}</td>
+                <td>Rp ${u.total.toLocaleString()}</td>
+            </tr>
+            `;
+        });
+
+        // total pengeluaran
+        const totalPengeluaran = pengeluaran.reduce((sum,p)=>sum+p.jumlah,0);
+
+        // tampilkan total
         container.innerHTML += `
-            <tr>
-                <td colspan="4" style="text-align:right"><b>Total Omzet:</b></td>
-                <td><b>Rp ${totalOmzet.toLocaleString()}</b></td>
-            </tr>
-            <tr>
-                <td colspan="4" style="text-align:right"><b>Total Utang:</b></td>
-                <td><b>Rp ${totalUtang.toLocaleString()}</b></td>
-            </tr>
+        <tr>
+            <td colspan="4" style="text-align:right"><b>Total Omzet Bersih:</b></td>
+            <td><b>Rp ${(totalOmzetRaw - totalPengeluaran).toLocaleString()}</b></td>
+        </tr>
+        <tr>
+            <td colspan="4" style="text-align:right"><b>Total Utang:</b></td>
+            <td><b>Rp ${totalUtang.toLocaleString()}</b></td>
+        </tr>
         `;
+
+        // render histori pengeluaran terpisah
+        const pengeluaranContainer = document.getElementById('listPengeluaran');
+        pengeluaranContainer.innerHTML = '';
+        pengeluaran.forEach(p=>{
+            pengeluaranContainer.innerHTML += `
+            <tr>
+                <td>${new Date(p.tanggal).toLocaleString()}</td>
+                <td>${p.keterangan}</td>
+                <td>Rp ${p.jumlah.toLocaleString()}</td>
+            </tr>
+            `;
+        });
         renderUserList(checkout);
-    } catch(err) {
+
+    } catch(err){
         console.error(err);
-        alert("Gagal ambil data transaksi");
+        alert('Gagal load transaksi / pengeluaran / utang');
     }
 }
 
+async function tambahPengeluaran(){
+  const keterangan = document.getElementById('ketPengeluaran').value.trim();
+  const jumlah = Number(document.getElementById('jumlahPengeluaran').value);
+  if(!keterangan || jumlah<=0){ alert("Isi keterangan dan jumlah valid"); return; }
+
+  const res = await fetch('/pengeluaran',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ keterangan, jumlah })
+  });
+  const data = await res.json();
+  if(!data.success){ alert(data.message); return; }
+
+  alert("Pengeluaran tercatat ✅");
+  document.getElementById('ketPengeluaran').value='';
+  document.getElementById('jumlahPengeluaran').value='';
+
+  loadTransaksi(); // update total omzet bersih
+}
+
+let historiVisible = false;
+function toggleHistoriPengeluaran(){
+  historiVisible = !historiVisible;
+  document.getElementById('historiPengeluaran').style.display = historiVisible ? 'block' : 'none';
+  if(historiVisible) loadPengeluaran();
+}
+
+async function loadPengeluaran(){
+  const res = await fetch('/pengeluaran');
+  const data = await res.json();
+  const container = document.getElementById('pengeluaranList');
+  container.innerHTML='';
+  data.forEach(p=>{
+    container.innerHTML += `<tr>
+      <td>${new Date(p.tanggal).toLocaleString()}</td>
+      <td>${p.keterangan}</td>
+      <td>Rp ${p.jumlah.toLocaleString()}</td>
+    </tr>`;
+  });
+}
 async function updateStatus(id, status){
     if(!confirm("Yakin ubah status?")) return
 
@@ -532,27 +612,41 @@ async function updateStatus(id, status){
     loadTransaksi()
 }
 async function reset() {
-    const konfirmasi = confirm("Yakin ingin menghapus SEMUA transaksi dan utang?");
+    const konfirmasi = confirm("Yakin ingin menghapus SEMUA transaksi, utang, dan pengeluaran?");
     if (!konfirmasi) return;
 
     try {
-        const res = await fetch('/reset-transaksi', {
+
+        // 1️⃣ Hapus transaksi & utang
+        const resTransaksi = await fetch('/reset-transaksi', {
             method: 'DELETE'
         });
+        const dataTransaksi = await resTransaksi.json();
 
-        const data = await res.json();
-
-        if (!data.success) {
-            alert("Gagal reset: " + data.message);
+        if (!dataTransaksi.success) {
+            alert("Gagal reset transaksi: " + dataTransaksi.message);
             return;
         }
 
-        alert("Semua transaksi berhasil dihapus ✅");
+        // 2️⃣ Hapus semua pengeluaran
+        const resPengeluaran = await fetch('/reset-pengeluaran', {
+            method: 'DELETE'
+        });
+        const dataPengeluaran = await resPengeluaran.json();
 
-        // kosongkan tabel
+        if (!dataPengeluaran.success) {
+            alert("Transaksi terhapus, tapi gagal hapus pengeluaran");
+            return;
+        }
+
+        alert("Semua data berhasil direset ✅");
+
+        // 3️⃣ Kosongkan tampilan langsung
         document.getElementById("laporan1").innerHTML = "";
-        
-        // reload data
+        document.getElementById("listPengeluaran").querySelector("tbody").innerHTML = "";
+        document.getElementById("user-list").innerHTML = "";
+
+        // 4️⃣ Reload supaya total jadi 0
         loadTransaksi();
 
     } catch (err) {
@@ -560,24 +654,21 @@ async function reset() {
         alert("Terjadi kesalahan saat reset");
     }
 }
-
 function renderUserList(checkoutData){
     const container = document.getElementById('user-list');
     container.innerHTML = '';
 
-    // 🔥 hanya online + pending
     const onlinePending = checkoutData.filter(tr =>
         tr.tipe === 'online' && tr.status === 'pending'
     );
 
     onlinePending.forEach(tr => {
-
         const div = document.createElement('div');
         div.className = 'user-card';
 
         div.innerHTML = `
-            <h4>${tr.nama || '-'}</h4>
-            <p>HP: ${tr.hp || '-'}</p>
+            <h4>${tr.user?.nama || '-'}</h4>
+            <p>HP: ${tr.user?.hp || '-'}</p>
             <p>Total: Rp ${tr.total.toLocaleString()}</p>
             <p>Status: pending</p>
 

@@ -6,5 +6,21 @@
     "jenis": "80/90. 17",
     "stok": 0,
     "foto": "ixte355wjearnvfth4jtu0x5b.webp"
+  },
+  {
+    "id": 1772555376376,
+    "nama": "asesories motor",
+    "harga": 5000,
+    "jenis": "Honda/Yamaha",
+    "stok": 0,
+    "foto": "a58neakm5vb8n7fh2x7yaevcb.webp"
+  },
+  {
+    "id": 1772560976528,
+    "nama": "break oil",
+    "harga": 5000,
+    "jenis": "Honda/Yamaha",
+    "stok": 5,
+    "foto": "qou4bw1mm6pr5fvaqjsjpbgj3.webp"
   }
 ]

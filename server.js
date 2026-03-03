@@ -47,6 +47,10 @@ if (fs.existsSync(checkoutFile)) {
     }
 }
 
+const pengeluaranFile = path.join(__dirname, 'pengeluaran.json');
+const pengeluaranData = fs.existsSync(pengeluaranFile) ? JSON.parse(fs.readFileSync(pengeluaranFile)) : [];
+
+
 // ===== ROUTES STATIC =====
 const routes = {
     '/': '/index.html',
@@ -461,11 +465,44 @@ if(req.method === 'POST' && req.url === '/utang'){
     return
 }
 
+if(req.method === 'GET' && req.url === '/pengeluaran'){
+    res.writeHead(200, {'Content-Type':'application/json'});
+    return res.end(JSON.stringify(pengeluaranData));
+  }
+
+  // ===== POST PENGELUARAN =====
+  if(req.method === 'POST' && req.url === '/pengeluaran'){
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      let data;
+      try { data = JSON.parse(body); } 
+      catch { 
+        res.writeHead(400, {'Content-Type':'application/json'});
+        return res.end(JSON.stringify({success:false, message:'JSON salah'}));
+      }
+
+      const { keterangan, jumlah } = data;
+      if(!keterangan || !jumlah || jumlah <=0){
+        res.writeHead(400, {'Content-Type':'application/json'});
+        return res.end(JSON.stringify({success:false, message:'Data tidak lengkap'}));
+      }
+
+      const pengeluaranBaru = { id: Date.now(), keterangan, jumlah, tanggal: new Date().toISOString() };
+      pengeluaranData.push(pengeluaranBaru);
+      fs.writeFileSync(pengeluaranFile, JSON.stringify(pengeluaranData,null,2));
+
+      res.writeHead(200, {'Content-Type':'application/json'});
+      res.end(JSON.stringify({success:true, pengeluaran: pengeluaranBaru}));
+    });
+    return;
+  }
 // ===== BAYAR UTANG =====
 if(req.method === 'POST' && req.url === '/bayar-utang'){
     let body = ''
     req.on('data', chunk => body += chunk)
     req.on('end', () => {
+
         let data
         try {
             data = JSON.parse(body)
@@ -475,6 +512,7 @@ if(req.method === 'POST' && req.url === '/bayar-utang'){
         }
 
         let { id, jumlahBayar } = data
+
         if(!id || !jumlahBayar || jumlahBayar <= 0){
             res.writeHead(400, {'Content-Type':'application/json'})
             return res.end(JSON.stringify({success:false, message:'Data bayar utang tidak valid'}))
@@ -486,26 +524,58 @@ if(req.method === 'POST' && req.url === '/bayar-utang'){
             return res.end(JSON.stringify({success:false, message:'Utang tidak ditemukan'}))
         }
 
+        if(jumlahBayar > utang.total){
+            jumlahBayar = utang.total // biar tidak lebih bayar
+        }
+
+        // 🔥 TAMBAHKAN KE CHECKOUT (OMZET)
+        checkoutData.push({
+            id: Date.now(),
+            tanggal: new Date(),
+            tipe: 'offline',
+            status: 'selesai',
+            user: { nama: utang.nama },
+            cart: utang.cart,
+            total: jumlahBayar,
+            keterangan: 'Pembayaran Utang'
+        })
+
+        fs.writeFileSync(checkoutFile, JSON.stringify(checkoutData, null, 2))
+
+        // 🔻 Kurangi / hapus utang
         if(jumlahBayar >= utang.total){
-            // lunas → hapus dari utangData
             const index = utangData.indexOf(utang)
             utangData.splice(index,1)
         } else {
-            // bayar sebagian → kurangi total
             utang.total -= jumlahBayar
         }
 
         fs.writeFileSync(utangFile, JSON.stringify(utangData, null, 2))
+
         res.writeHead(200, {'Content-Type':'application/json'})
-        res.end(JSON.stringify({success:true, sisa: utang.total || 0}))
+        res.end(JSON.stringify({
+            success:true,
+            sisa: utang.total > 0 ? utang.total : 0
+        }))
     })
     return
 }
-
 // ===== GET DATA UTANG =====
 if(req.method === 'GET' && req.url.startsWith('/get-utang')){
     res.writeHead(200, {'Content-Type':'application/json'})
     return res.end(JSON.stringify(utangData))
+}
+
+if(req.method === 'DELETE' && req.url === '/reset-pengeluaran'){
+
+    // kosongkan array di memory
+    pengeluaranData.length = 0
+
+    // kosongkan file
+    fs.writeFileSync(pengeluaranFile, JSON.stringify([], null, 2))
+
+    res.writeHead(200, {'Content-Type':'application/json'})
+    return res.end(JSON.stringify({success:true}))
 }
 
 // ===== RESET TRANSAKSI =====
@@ -514,10 +584,11 @@ if(req.method === 'DELETE' && req.url === '/reset-transaksi'){
     // kosongkan array di memory
     checkoutData.length = 0
     utangData.length = 0
-
+    pengeluaranData.length = 0
     // kosongkan file
     fs.writeFileSync(checkoutFile, JSON.stringify([], null, 2))
     fs.writeFileSync(utangFile, JSON.stringify([], null, 2))
+    fs.writeFileSync(pengeluaranFile, JSON.stringify([], null, 2))
 
     res.writeHead(200, {'Content-Type':'application/json'})
     return res.end(JSON.stringify({success:true}))

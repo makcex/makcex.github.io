@@ -597,10 +597,39 @@ function tutup() {
 }
 
 function kirim() {
+   let nama = document.getElementById("nama").value.trim()
+  let hp = document.getElementById("hp").value.trim()
+  let alamat = document.getElementById("alamat").value.trim()
+
+  if(!nama || !hp || !alamat){
+    alert("Semua data wajib diisi")
+    return
+  }
+
+
+   // hapus semua selain angka
+  hp = hp.replace(/\D/g, '')
+
+  // ubah format ke 62
+  if(hp.startsWith("0")){
+    hp = "62" + hp.substring(1)
+  }
+
+  if(hp.startsWith("8")){
+    hp = "62" + hp
+  }
+
+  // validasi panjang nomor Indonesia
+  if(hp.length < 10 || hp.length > 15){
+    alert("Nomor HP tidak valid")
+    return
+  }
+
+
   const user = {
-    nama: document.getElementById("nama").value,
-    hp: document.getElementById("hp").value,
-    alamat: document.getElementById("alamat").value
+    nama,
+    hp,
+    alamat
   }
 
   fetch("/checkout", {
