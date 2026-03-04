@@ -530,15 +530,19 @@ if(req.method === 'POST' && req.url === '/bayar-utang'){
 
         // 🔥 TAMBAHKAN KE CHECKOUT (OMZET)
         checkoutData.push({
-            id: Date.now(),
-            tanggal: new Date(),
-            tipe: 'offline',
-            status: 'selesai',
-            user: { nama: utang.nama },
-            cart: utang.cart,
-            total: jumlahBayar,
-            keterangan: 'Pembayaran Utang'
-        })
+    id: Date.now(),
+    tanggal: new Date().toISOString(),
+    tipe: 'offline',
+    status: 'selesai',
+    user: { nama: utang.nama },
+    cart: utang.cart.map(i => ({
+        ...i,
+        keterangan: jumlahBayar >= utang.total 
+            ? 'LUNAS'
+            : 'CICILAN'
+    })),
+    total: jumlahBayar
+})
 
         fs.writeFileSync(checkoutFile, JSON.stringify(checkoutData, null, 2))
 

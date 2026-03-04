@@ -1,1 +1,62 @@
-[]
+[
+  {
+    "id": 1772617033639,
+    "tanggal": "2026-03-04T09:37:13.639Z",
+    "tipe": "offline",
+    "status": "selesai",
+    "user": {
+      "nama": "rice"
+    },
+    "cart": [
+      {
+        "id": "manual_1772617010656",
+        "nama": "minyak",
+        "harga": 10000,
+        "jumlah": 1,
+        "manual": true,
+        "keterangan": "LUNAS"
+      }
+    ],
+    "total": 10000
+  },
+  {
+    "id": 1772617083522,
+    "tanggal": "2026-03-04T09:38:03.522Z",
+    "tipe": "offline",
+    "status": "selesai",
+    "user": {
+      "nama": "rendi"
+    },
+    "cart": [
+      {
+        "id": "manual_1772617059706",
+        "nama": "bensin",
+        "harga": 10000,
+        "jumlah": 1,
+        "manual": true,
+        "keterangan": "CICILAN"
+      }
+    ],
+    "total": 5000
+  },
+  {
+    "id": 1772617098540,
+    "tanggal": "2026-03-04T09:38:18.540Z",
+    "tipe": "offline",
+    "status": "selesai",
+    "user": {
+      "nama": "rendi"
+    },
+    "cart": [
+      {
+        "id": "manual_1772617059706",
+        "nama": "bensin",
+        "harga": 10000,
+        "jumlah": 1,
+        "manual": true,
+        "keterangan": "LUNAS"
+      }
+    ],
+    "total": 5000
+  }
+]
