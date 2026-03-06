@@ -377,33 +377,69 @@ for(let item of items){
 }
 
 // ===== UPDATE STATUS ORDER =====
+// ===== UPDATE STATUS ORDER =====
 if(req.method === 'POST' && req.url === '/update-status'){
     let body = ''
     req.on('data', chunk => body += chunk)
+
     req.on('end', () => {
+
         let data
-        try {
+        try{
             data = JSON.parse(body)
-        } catch {
+        }catch{
             res.writeHead(400, {'Content-Type':'application/json'})
             return res.end(JSON.stringify({success:false}))
         }
 
         const { id, status } = data
 
-        const trx = checkoutData.find(t => String(t.id) === String(id))
-        if(!trx){
+        const index = checkoutData.findIndex(t => String(t.id) === String(id))
+
+        if(index === -1){
             res.writeHead(404, {'Content-Type':'application/json'})
-            return res.end(JSON.stringify({success:false, message:'Tidak ditemukan'}))
+            return res.end(JSON.stringify({success:false, message:'Transaksi tidak ditemukan'}))
         }
 
-        trx.status = status
+        const trx = checkoutData[index]
+
+        // =========================
+        // JIKA STATUS BATAL
+        // =========================
+        if(status === 'batal'){
+
+            // kembalikan stok produk
+            trx.cart.forEach(item => {
+
+                if(item.manual) return
+
+                const produk = products.find(p => String(p.id) === String(item.id))
+
+                if(produk){
+                    produk.stok += item.jumlah
+                }
+
+            })
+
+            fs.writeFileSync(dataFile, JSON.stringify(products, null, 2))
+
+            // hapus transaksi dari daftar
+            checkoutData.splice(index,1)
+
+        }else{
+
+            // jika selesai → hanya ubah status
+            trx.status = status
+
+        }
 
         fs.writeFileSync(checkoutFile, JSON.stringify(checkoutData, null, 2))
 
         res.writeHead(200, {'Content-Type':'application/json'})
         res.end(JSON.stringify({success:true}))
+
     })
+
     return
 }
 

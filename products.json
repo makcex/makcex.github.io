@@ -20,7 +20,70 @@
     "nama": "break oil",
     "harga": 5000,
     "jenis": "Honda/Yamaha",
-    "stok": 5,
+    "stok": 3,
     "foto": "qou4bw1mm6pr5fvaqjsjpbgj3.webp"
+  },
+  {
+    "id": 1772773816568,
+    "nama": "koil Honda",
+    "harga": 15000,
+    "jenis": "Honda",
+    "stok": 5,
+    "foto": "yw2f5ytd4z2ln252468hu104l.GAMBAR.webp"
+  },
+  {
+    "id": 1772773877498,
+    "nama": "Bohlam depan ",
+    "harga": 10000,
+    "jenis": "honda",
+    "stok": 10,
+    "foto": "gc5kx6sbgxalx3099xsrh9dwy.webp"
+  },
+  {
+    "id": 1772773932956,
+    "nama": "Busi NGK",
+    "harga": 15000,
+    "jenis": "honda/Yamaha",
+    "stok": 8,
+    "foto": "gcauo68liequbuhuktgnrcanf.webp"
+  },
+  {
+    "id": 1772773983047,
+    "nama": "Ban luar",
+    "harga": 65000,
+    "jenis": "honda",
+    "stok": 4,
+    "foto": "s6st8jq1854glg61v6ore6hmk.webp"
+  },
+  {
+    "id": 1772774046205,
+    "nama": "kanvas rem",
+    "harga": 15000,
+    "jenis": "Honda/Yamaha",
+    "stok": 5,
+    "foto": "rdbuc126x3y2fmt8ja9xdmzjg.webp"
+  },
+  {
+    "id": 1772774421533,
+    "nama": "Spakboard Mio",
+    "harga": 35000,
+    "jenis": "Mio",
+    "stok": 4,
+    "foto": "dhyfkf61hgj1x9n9wu082sbg3.webp"
+  },
+  {
+    "id": 1772774463805,
+    "nama": "Gir",
+    "harga": 25000,
+    "jenis": "Honda",
+    "stok": 4
+  },
+  {
+    "id": 1772774680874,
+    "nama": "tali rem",
+    "harga": 8000,
+    "jenis": "mio",
+    "stok": 5,
+    "foto": "cby37h70numjw4nceif3oio2w.webp"
   }
 ]

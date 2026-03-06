@@ -668,7 +668,11 @@ function renderUserList(checkoutData){
 
         div.innerHTML = `
             <h4>${tr.user?.nama || '-'}</h4>
-            <p>HP: ${tr.user?.hp || '-'}</p>
+            <p>HP: ${
+        tr.user?.hp 
+        ? `<a href="https://wa.me/${tr.user.hp.replace(/\D/g,'')}" target="_blank">${tr.user.hp}</a>` 
+        : '-'}</p>
+            <p><b>Alamat: ${tr.user?.alamat || '-'}</b></p>
             <p>Total: Rp ${tr.total.toLocaleString()}</p>
             <p>Status: pending</p>
 
