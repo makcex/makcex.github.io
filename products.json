@@ -85,5 +85,29 @@
     "jenis": "mio",
     "stok": 5,
     "foto": "cby37h70numjw4nceif3oio2w.webp"
+  },
+  {
+    "id": 1774762392038,
+    "nama": "kursi",
+    "harga": 100000,
+    "jenis": "botong",
+    "stok": 2,
+    "foto": "ok827x34tvnwn9igajd3dkgnu.webp"
+  },
+  {
+    "id": 1774762462445,
+    "nama": "bantal",
+    "harga": 20000,
+    "jenis": "bulu-bulu",
+    "stok": 2,
+    "foto": "qdph65zbrwvm3qdek2a2fo9vi.webp"
+  },
+  {
+    "id": 1774762567820,
+    "nama": "gorden",
+    "harga": 25000,
+    "jenis": "wolf",
+    "stok": 2,
+    "foto": "ntca5kqzlppyoyq175md3sauz.webp"
   }
 ]
