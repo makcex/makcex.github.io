@@ -268,13 +268,34 @@ ul {
 
   @media (max-width: 768px) {
   .info {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    min-width: 25vw;
+    width: 90%;
+    height: 100%;
+    bottom: -100%;
+    left: 0;
     border-radius: 20px 20px 0 0;
-    padding: 10px;
+    overflow-y: auto;
   }
+
+  .info.active {
+    bottom: 10px;
+    transition: all 0.3s ease-in-out;
+  }
+
+  #infoBtn {
+  position: fixed;      /* selalu di layar */
+  bottom: 20px;         /* jarak dari bawah */
+  right: 5px; 
+  left: 5px;         /* jarak dari kanan */
+  z-index: 2000;        /* supaya di atas semua */
+  background: #444;  /* warna tombol */
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 50px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
 
    .info h2 {
     font-size: 1rem; /* responsif untuk HP */
@@ -318,7 +339,7 @@ ul {
   }
 
   .card{
-    width: 40vw;
+    width: 100%;
   }
 
   .card img {
@@ -333,7 +354,7 @@ ul {
     width: 90%;
     top: 70px; /* beri jarak header */
     position: fixed;
-  top: 100px; /* di bawah header */
+  top: 112px; /* di bawah header */
   left: 0;
   width: 50%; /* desktop */
   max-width: 600px;
@@ -343,6 +364,7 @@ ul {
   .search-bar input {
     font-size: 0.9rem;
     padding: 8px 12px;
+    width: 100%
   }
 
 }
@@ -713,7 +735,14 @@ function kirim() {
   })
 }
 
+const sheet = document.getElementById('sheet')
 
+// buat tombol Info
+const infoBtn = document.createElement('button')
+infoBtn.id = 'infoBtn'
+infoBtn.innerText = 'Info'
+infoBtn.onclick = () => sheet.classList.toggle('active')
+document.body.appendChild(infoBtn)
 
 
 </script>
