@@ -466,7 +466,7 @@ ul {
   const keranjang = []
   const products = []
 
-  fetch("/products")
+  fetch("/products.json")
   .then(res => res.json())
   .then(data => {
     products.push(...data)
