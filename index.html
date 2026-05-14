@@ -12,9 +12,6 @@
 <meta property="og:url" content="https://makcex.github.io/">
 <meta property="og:image" content="https://makcex.github.io/img/IMG_20260203_140709_148.jpg">
 <meta name="robots" content="index, follow">
-<meta name="google-site-verification" content="lmgmPrqf-CsH7Iztw4DWKAYV52ph15BArcjNfSaKhAU" />
-<link rel="canonical" href="https://makcex.github.io/">
-<link rel="icon" href="img/favicon.ico" type="image/x-icon">
 <title>Bengkel Motor Eral dan Rendi desa Perbo | Service,Ganti oli & sparepart</title>
 <style>
 body {
@@ -487,11 +484,11 @@ ul {
 </div>
 
 <script>
-
+  const API = 'https://cooling-eva-legs-relations.trycloudflare.com'
   const keranjang = []
   const products = []
 
-  fetch("/products.json")
+  fetch(`${API}/products`)
   .then(res => res.json())
   .then(data => {
     products.push(...data)
@@ -705,7 +702,7 @@ function kirim() {
     alamat
   }
 
-  fetch("/checkout", {
+  fetch(`${API}/checkout`, {
     method:"POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ user, keranjang })

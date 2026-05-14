@@ -61,6 +61,15 @@ const routes = {
 // ===== SERVER =====
 const server = http.createServer((req, res) => {
 
+     res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+    if(req.method === 'OPTIONS'){
+        res.writeHead(200)
+        return res.end()
+    }
+
     if (req.url === '/google0498f0468e07c462.html') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     return res.end('google-site-verification: google0498f0468e07c462.html');

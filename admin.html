@@ -170,8 +170,10 @@ th {
 <div id="user-list" style="max-height:400px; overflow-y:auto;"></div>
     <script>
 
+const API = 'https://cooling-eva-legs-relations.trycloudflare.com'
+
 function loadTransaksi() {
-  fetch('/admin-data?k=abc')
+  fetch(`${API}/admin-data?k=abc`)
   .then(res => {
     if (!res.ok) throw new Error("Gagal ambil data admin");
     return res.json();
@@ -227,7 +229,7 @@ function loadTransaksi() {
     const formData = new FormData()
     formData.append('img', fileInput.files[0])
 
-    fetch('/upload', {
+    fetch(`${API}/upload`, {
         method: 'POST',
         body: formData
     })
@@ -242,7 +244,7 @@ function loadTransaksi() {
             stok: Number(document.getElementById('stok').value)
         }
 
-        return fetch('/products', {
+        return fetch(`${API}/products`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(produk)
@@ -263,7 +265,7 @@ function loadTransaksi() {
 
 // --- Produk online ---
 let semuaProduk = [];
-fetch("/products").then(r=>r.json()).then(d=>{
+fetch(`${API}/products`).then(r=>r.json()).then(d=>{
     semuaProduk = d;
     const datalist = document.getElementById("listProduk");
     datalist.innerHTML = "";
@@ -413,7 +415,7 @@ function bayarKasirUtang(){
     const nama = prompt("Nama pembeli utang:");
     if(!nama) return;
 
-    fetch('/utang', {
+    fetch(`${API}/utang`, {
         method:'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -452,7 +454,7 @@ async function bayarUtangServer(){
         const bayar = Number(prompt(`Total utang: Rp ${utang.total.toLocaleString()}\nMasukkan jumlah bayar:`));
         if(!bayar || bayar <= 0) return;
 
-        const resBayar = await fetch('/bayar-utang',{
+        const resBayar = await fetch(`${API}/bayar-utang`,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({id: utang.id, jumlahBayar: bayar})
@@ -472,15 +474,15 @@ async function bayarUtangServer(){
 async function loadTransaksi() {
     try{
         // ambil data checkout
-        const res1 = await fetch('/admin-data?k=abc');
+        const res1 = await fetch(`${API}/admin-data?k=abc`);
         const checkout = await res1.json();
 
         // ambil data pengeluaran
-        const res2 = await fetch('/pengeluaran');
+        const res2 = await fetch(`${API}/pengeluaran`);
         const pengeluaran = await res2.json();
 
         // ambil data utang (tetap dari server utang)
-        const res3 = await fetch('/get-utang');
+        const res3 = await fetch(`${API}/get-utang`);
         const utang = await res3.json();
 
         const container = document.getElementById('laporan1');
@@ -565,7 +567,7 @@ async function tambahPengeluaran(){
   const jumlah = Number(document.getElementById('jumlahPengeluaran').value);
   if(!keterangan || jumlah<=0){ alert("Isi keterangan dan jumlah valid"); return; }
 
-  const res = await fetch('/pengeluaran',{
+  const res = await fetch(`${API}/pengeluaran`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({ keterangan, jumlah })
@@ -588,7 +590,7 @@ function toggleHistoriPengeluaran(){
 }
 
 async function loadPengeluaran(){
-  const res = await fetch('/pengeluaran');
+  const res = await fetch(`${API}/pengeluaran`);
   const data = await res.json();
   const container = document.getElementById('pengeluaranList');
   container.innerHTML='';
@@ -603,7 +605,7 @@ async function loadPengeluaran(){
 async function updateStatus(id, status){
     if(!confirm("Yakin ubah status?")) return
 
-    await fetch('/update-status',{
+    await fetch(`${API}/update-status`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({ id, status })
@@ -618,7 +620,7 @@ async function reset() {
     try {
 
         // 1️⃣ Hapus transaksi & utang
-        const resTransaksi = await fetch('/reset-transaksi', {
+        const resTransaksi = await fetch(`${API}/reset-transaksi`, {
             method: 'DELETE'
         });
         const dataTransaksi = await resTransaksi.json();
@@ -629,7 +631,7 @@ async function reset() {
         }
 
         // 2️⃣ Hapus semua pengeluaran
-        const resPengeluaran = await fetch('/reset-pengeluaran', {
+        const resPengeluaran = await fetch(`${API}/reset-pengeluaran`, {
             method: 'DELETE'
         });
         const dataPengeluaran = await resPengeluaran.json();
